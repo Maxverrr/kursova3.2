@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, Link } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import CarList from './CarList';
@@ -19,25 +19,25 @@ const Header = () => {
       <nav className="flex items-center px-6 flex-wrap">
         {/* Left section */}
         <div className="w-1/4 flex-shrink-0 min-w-fit">
-          <Link to="/main" className="text-3xl font-medium hover:text-gray-300">Головна</Link>
+          <a href="/main" className="text-3xl font-medium hover:text-gray-300">Головна</a>
         </div>
 
         {/* Center section */}
         <div className="flex-1 flex justify-center items-center space-x-8 min-w-fit">
-          <Link to="/" className="text-3xl font-medium hover:text-gray-300">Автопарк</Link>
+          <a href="/" className="text-3xl font-medium hover:text-gray-300">Автопарк</a>
         </div>
 
         {/* Right section */}
         <div className="flex-1 flex justify-end items-center space-x-4 min-w-fit">
-          <Link to="/support" className="text-2xl font-medium hover:text-gray-300">Тех. підтримка</Link>
+          <a href="/support" className="text-2xl font-medium hover:text-gray-300">Тех. підтримка</a>
           {user?.role === 'admin' && (
             <>
-              <Link to="/users" className="text-2xl font-medium hover:text-gray-300">Користувачі</Link>
-              <Link to="/rentals" className="text-2xl font-medium hover:text-gray-300">Замовлення📃</Link>
+              <a href="/users" className="text-2xl font-medium hover:text-gray-300">Користувачі</a>
+              <a href="/rentals" className="text-2xl font-medium hover:text-gray-300">Замовлення📃</a>
             </>
           )}
           {user?.role === 'user' && (
-            <Link to="/my-rentals" className="text-2xl font-medium hover:text-gray-300">Мої замовлення📃</Link>
+            <a href="/my-rentals" className="text-2xl font-medium hover:text-gray-300">Мої замовлення📃</a>
           )}
           {user && (
             <>

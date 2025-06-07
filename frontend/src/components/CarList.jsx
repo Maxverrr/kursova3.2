@@ -81,9 +81,7 @@ const CarList = () => {
             });
             setCars(data);
         } catch (err) {
-            console.error('Error fetching cars:', err);
-            setError(err.message || 'Помилка при завантаженні автомобілів. Спробуйте оновити сторінку.');
-            setCars([]);
+            setError(err.message);
         } finally {
             setLoading(false);
         }
@@ -142,17 +140,7 @@ const CarList = () => {
     };
 
     if (loading) return <div className="text-center py-4 text-white">Завантаження...</div>;
-    if (error) return (
-        <div className="text-red-500 text-center py-4">
-            <p>Помилка: {error}</p>
-            <button 
-                onClick={fetchCars}
-                className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-            >
-                Спробувати ще раз
-            </button>
-        </div>
-    );
+    if (error) return <div className="text-red-500 text-center py-4">Помилка: {error}</div>;
 
     return (
         
