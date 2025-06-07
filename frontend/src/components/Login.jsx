@@ -34,45 +34,45 @@ const Login = () => {
     return (
         <div className="auth-container">
             <div className="auth-box">
-                <h1>Welcome Back</h1>
-                <p className="subtitle">Sign in to manage your car rental system</p>
+                <h1>Ласкаво просимо</h1>
+                <p className="subtitle">Увійдіть до системи оренди автомобілів</p>
 
                 {error && <div className="error-message">{error}</div>}
 
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label htmlFor="email">Email</label>
+                        <label htmlFor="email">Електронна пошта</label>
                         <input
                             type="email"
                             id="email"
                             name="email"
                             value={formData.email}
                             onChange={handleChange}
-                            placeholder="Enter your email"
+                            placeholder="Введіть вашу електронну пошту"
                             required
                         />
                     </div>
 
                     <div className="form-group">
-                        <label htmlFor="password">Password</label>
+                        <label htmlFor="password">Пароль</label>
                         <input
                             type="password"
                             id="password"
                             name="password"
                             value={formData.password}
                             onChange={handleChange}
-                            placeholder="Enter your password"
+                            placeholder="Введіть ваш пароль"
                             required
                         />
                     </div>
 
                     <button type="submit" className="submit-button">
-                        Sign in
+                        Увійти
                     </button>
                 </form>
 
                 <p className="auth-footer">
-                    Don't have an account? <Link to="/signup">Sign up</Link>
+                    Немає облікового запису? <Link to="/signup">Зареєструватися</Link>
                 </p>
             </div>
         </div>

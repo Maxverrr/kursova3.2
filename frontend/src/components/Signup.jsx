@@ -28,11 +28,6 @@ const Signup = () => {
     e.preventDefault();
     setError('');
 
-    if (!formData.email.endsWith('@gmail.com')) {
-      setError('Будь ласка, використовуйте адресу Gmail');
-      return;
-    }
-
     try {
       await signup(formData);
       navigate('/login');
@@ -44,99 +39,98 @@ const Signup = () => {
   return (
     <div className="auth-container">
       <div className="auth-box">
-        <h1>Create Account</h1>
-        <p className="subtitle">Sign up to start using car rental system</p>
+        <h1>Створити обліковий запис</h1>
+        <p className="subtitle">Зареєструйтесь, щоб почати користуватися системою оренди автомобілів</p>
 
         {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">Email (Gmail only)</label>
+            <label htmlFor="email">Електронна пошта</label>
             <input
               type="email"
               id="email"
               name="email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter your Gmail address"
-              pattern="[a-z0-9._%+-]+@gmail\.com$"
+              placeholder="Введіть вашу електронну пошту"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">Пароль</label>
             <input
               type="password"
               id="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Enter your password"
+              placeholder="Введіть ваш пароль"
               minLength="6"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="first_name">First Name</label>
+            <label htmlFor="first_name">Ім'я</label>
             <input
               type="text"
               id="first_name"
               name="first_name"
               value={formData.first_name}
               onChange={handleChange}
-              placeholder="Enter your first name"
+              placeholder="Введіть ваше ім'я"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="last_name">Last Name</label>
+            <label htmlFor="last_name">Прізвище</label>
             <input
               type="text"
               id="last_name"
               name="last_name"
               value={formData.last_name}
               onChange={handleChange}
-              placeholder="Enter your last name"
+              placeholder="Введіть ваше прізвище"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="middle_name">Middle Name</label>
+            <label htmlFor="middle_name">По батькові</label>
             <input
               type="text"
               id="middle_name"
               name="middle_name"
               value={formData.middle_name}
               onChange={handleChange}
-              placeholder="Enter your middle name"
+              placeholder="Введіть ваше по батькові"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="phone_number">Phone Number</label>
+            <label htmlFor="phone_number">Номер телефону</label>
             <input
               type="tel"
               id="phone_number"
               name="phone_number"
               value={formData.phone_number}
               onChange={handleChange}
-              placeholder="Enter your phone number"
+              placeholder="Введіть ваш номер телефону"
               required
             />
           </div>
 
           <button type="submit" className="submit-button">
-            Create Account
+            Створити обліковий запис
           </button>
         </form>
 
         <p className="auth-footer">
-          Already have an account? <Link to="/login">Sign in</Link>
+          Вже маєте обліковий запис? <Link to="/login">Увійти</Link>
         </p>
       </div>
     </div>

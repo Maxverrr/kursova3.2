@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import CarList from './CarList';
@@ -19,25 +19,25 @@ const Header = () => {
       <nav className="flex items-center px-6 flex-wrap">
         {/* Left section */}
         <div className="w-1/4 flex-shrink-0 min-w-fit">
-          <a href="/main" className="text-3xl font-medium hover:text-gray-300">Головна</a>
+          <Link to="/main" className="text-3xl font-medium hover:text-gray-300">Головна</Link>
         </div>
 
         {/* Center section */}
         <div className="flex-1 flex justify-center items-center space-x-8 min-w-fit">
-          <a href="/" className="text-3xl font-medium hover:text-gray-300">Автопарк</a>
+          <Link to="/" className="text-3xl font-medium hover:text-gray-300">Автопарк</Link>
         </div>
 
         {/* Right section */}
         <div className="flex-1 flex justify-end items-center space-x-4 min-w-fit">
-          <a href="/support" className="text-2xl font-medium hover:text-gray-300">Тех. підтримка</a>
+          <Link to="/support" className="text-2xl font-medium hover:text-gray-300">Тех. підтримка</Link>
           {user?.role === 'admin' && (
             <>
-              <a href="/users" className="text-2xl font-medium hover:text-gray-300">Користувачі</a>
-              <a href="/rentals" className="text-2xl font-medium hover:text-gray-300">Замовлення📃</a>
+              <Link to="/users" className="text-2xl font-medium hover:text-gray-300">Користувачі</Link>
+              <Link to="/rentals" className="text-2xl font-medium hover:text-gray-300">Замовлення📃</Link>
             </>
           )}
           {user?.role === 'user' && (
-            <a href="/my-rentals" className="text-2xl font-medium hover:text-gray-300">Мої замовлення📃</a>
+            <Link to="/my-rentals" className="text-2xl font-medium hover:text-gray-300">Мої замовлення📃</Link>
           )}
           {user && (
             <>

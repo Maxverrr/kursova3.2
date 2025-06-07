@@ -197,6 +197,16 @@ const CarDetails = () => {
         }
     };
 
+    const handleDeleteReview = async (reviewId) => {
+        if (!window.confirm('Ви впевнені, що хочете видалити цей відгук?')) return;
+        try {
+            await ApiService.deleteReview(reviewId);
+            setReviews(reviews.filter(r => r._id !== reviewId));
+        } catch (err) {
+            alert(err.message || 'Помилка при видаленні відгуку');
+        }
+    };
+
     if (loading) return (
         <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
             <div className="text-white text-xl">Завантаження...</div>
@@ -329,10 +339,18 @@ const CarDetails = () => {
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>
                                                     <h3 className="font-semibold text-white">
-                                                        {review.client.first_name} {review.client.patronymic} {review.client.last_name}
+                                                        {review.client.first_name} {review.client.middle_name} {review.client.last_name}
                                                     </h3>
                                                     <p className="text-sm text-gray-400">{formatDate(review.review_date)}</p>
                                                 </div>
+                                                {(user && (user.role === 'admin' || user.id === review.client._id)) && (
+                                                    <button
+                                                        onClick={() => handleDeleteReview(review._id)}
+                                                        className="ml-4 px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700 text-xs"
+                                                    >
+                                                        Видалити
+                                                    </button>
+                                                )}
                                             </div>
                                             <p className="text-gray-300">{review.comment}</p>
                                         </div>

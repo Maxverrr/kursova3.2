@@ -44,7 +44,7 @@ const rentalSchema = new mongoose.Schema({
 
 // Review Schema
 const reviewSchema = new mongoose.Schema({
-  client: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
+  client: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   car: { type: mongoose.Schema.Types.ObjectId, ref: 'Car', required: true },
   car_name: { type: String },
   comment: { type: String },
