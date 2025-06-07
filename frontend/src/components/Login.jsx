@@ -72,7 +72,7 @@ const Login = () => {
                 </form>
 
                 <p className="auth-footer">
-                    Немає облікового запису? <Link to="/signup">Зареєструватися</Link>
+                    Немає облікового запису? <Link to="/signup">Зареєструватися </Link>
                 </p>
             </div>
         </div>
