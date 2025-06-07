@@ -44,13 +44,20 @@ class ApiService {
         }
 
         try {
+            console.log(`Making request to: ${url}`);
+            console.log('Request headers:', headers);
+            console.log('Request options:', options);
+
             const response = await fetch(url, {
                 ...options,
                 headers
             });
 
+            console.log(`Response status: ${response.status}`);
+            
             if (!response.ok) {
                 const error = await response.json().catch(() => ({ error: 'Виникла невідома помилка' }));
+                console.error('Response error:', error);
                 if (response.status === 401) {
                     this.clearToken();
                     window.location.href = '/login';
@@ -61,7 +68,13 @@ class ApiService {
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error('Помилка API запиту:', error);
+            console.error('API request error:', error);
+            console.error('Full error details:', {
+                message: error.message,
+                stack: error.stack,
+                url,
+                options
+            });
             throw error;
         }
     }
