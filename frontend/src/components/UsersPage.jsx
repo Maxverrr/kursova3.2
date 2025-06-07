@@ -86,9 +86,12 @@ const UsersPage = () => {
                                     <thead className="bg-gray-700">
                                         <tr>
                                             <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">Email</th>
+                                            <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">Телефон</th>
                                             <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">Ім'я</th>
                                             <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">Прізвище</th>
+                                            <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">По батькові</th>     
                                             <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">Роль</th>
+                                            <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">Дата створення</th>
                                             <th className="px-4 sm:px-6 py-3 text-left text-xs font-medium text-gray-200 uppercase tracking-wider">Дії</th>
                                         </tr>
                                     </thead>
@@ -99,13 +102,22 @@ const UsersPage = () => {
                                                     {user.email}
                                                 </td>
                                                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                                    {user.phone_number || '-'}
+                                                </td>
+                                                <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                                     {user.first_name}
                                                 </td>
                                                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                                     {user.last_name}
                                                 </td>
                                                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                                    {user.middle_name || '-'}
+                                                </td>
+                                                <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
                                                     {user.role}
+                                                </td>
+                                                <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                                                    {formatDate(user.created_at)}
                                                 </td>
                                                 <td className="px-4 sm:px-6 py-4 whitespace-nowrap text-sm">
                                                     <div className="flex flex-col sm:flex-row gap-2">
@@ -140,13 +152,24 @@ const UsersPage = () => {
                                 <form onSubmit={(e) => {
                                     e.preventDefault();
                                     handleEdit(editingUser._id, {
+                                        phone_number: e.target.phone_number.value,
                                         first_name: e.target.first_name.value,
                                         last_name: e.target.last_name.value,
+                                        middle_name: e.target.middle_name.value,
                                         role: e.target.role.value
                                     });
                                 }}>
                                     <div className="space-y-4">
                                         <div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-300">Номер телефону</label>
+                                            <input
+                                                type="tel"
+                                                name="phone_number"
+                                                defaultValue={editingUser.phone_number}
+                                                className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white"
+                                            />
+                                        </div>
                                             <label className="block text-sm font-medium text-gray-300">Ім'я</label>
                                             <input
                                                 type="text"
@@ -155,6 +178,7 @@ const UsersPage = () => {
                                                 className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white"
                                             />
                                         </div>
+                                        
                                         <div>
                                             <label className="block text-sm font-medium text-gray-300">Прізвище</label>
                                             <input
@@ -164,6 +188,16 @@ const UsersPage = () => {
                                                 className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white"
                                             />
                                         </div>
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-300">По батькові</label>
+                                            <input
+                                                type="text"
+                                                name="middle_name"
+                                                defaultValue={editingUser.middle_name}
+                                                className="mt-1 block w-full rounded-md bg-gray-700 border-gray-600 text-white"
+                                            />
+                                        </div>
+                                        
                                         <div>
                                             <label className="block text-sm font-medium text-gray-300">Роль</label>
                                             <select

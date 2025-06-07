@@ -1,10 +1,8 @@
 const express = require('express');
 const cors = require('cors');
-const path = require('path');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const { body, validationResult } = require('express-validator');
-const multer = require('multer');
 const connectDB = require('./config/database');
 const { User, BodyType, Class, FuelType, Status, Car, Review, Rental } = require('./models');
 const mongoose = require('mongoose');
@@ -316,10 +314,7 @@ app.delete('/api/cars/:id', [auth, isAdmin], async (req, res) => {
 // Get reviews for a car
 app.get('/api/cars/:id/reviews', auth, async (req, res) => {
   try {
-    console.log('Fetching reviews for car ID:', req.params.id);
-    
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      console.error('Invalid MongoDB ObjectId:', req.params.id);
       return res.status(400).json({ error: 'Invalid car ID format' });
     }
 
@@ -330,24 +325,52 @@ app.get('/api/cars/:id/reviews', auth, async (req, res) => {
       })
       .sort({ review_date: -1 });
 
-    console.log('Found reviews:', JSON.stringify(reviews, null, 2));
     res.json(reviews);
   } catch (error) {
-    console.error('Error fetching reviews:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack
-    });
     res.status(500).json({ error: 'Failed to fetch reviews' });
+  }
+});
+
+// Create review for a car
+app.post('/api/cars/:id/reviews', auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Invalid car ID format' });
+    }
+
+    const { comment } = req.body;
+    if (!comment) {
+      return res.status(400).json({ error: 'Comment is required' });
+    }
+
+    const car = await Car.findById(req.params.id);
+    if (!car) {
+      return res.status(404).json({ error: 'Car not found' });
+    }
+
+    const review = await Review.create({
+      client: req.user.id,
+      car: req.params.id,
+      car_name: car.name,
+      comment,
+      review_date: new Date()
+    });
+
+    const populatedReview = await Review.findById(review._id)
+      .populate({
+        path: 'client',
+        select: 'first_name last_name middle_name'
+      });
+
+    res.status(201).json(populatedReview);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to create review' });
   }
 });
 
 // Check car availability
 app.post('/api/cars/:id/check-availability', auth, async (req, res) => {
   try {
-    console.log('Checking availability for car:', req.params.id);
-    console.log('Request body:', req.body);
-    
     const { startDate, endDate } = req.body;
     const carId = req.params.id;
 
@@ -355,15 +378,11 @@ app.post('/api/cars/:id/check-availability', auth, async (req, res) => {
     const start = new Date(startDate);
     const end = new Date(endDate);
 
-    console.log('Parsed dates:', { start, end });
-
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      console.error('Invalid date format received');
       return res.status(400).json({ error: 'Invalid date format' });
     }
 
     if (start >= end) {
-      console.error('End date is not after start date');
       return res.status(400).json({ error: 'End date must be after start date' });
     }
 
@@ -378,16 +397,12 @@ app.post('/api/cars/:id/check-availability', auth, async (req, res) => {
       ]
     });
 
-    console.log('Found overlapping rentals:', overlappingRentals);
-
     if (overlappingRentals.length > 0) {
       // Get the dates that overlap
       const overlappingDates = overlappingRentals.map(rental => ({
         start: rental.start_date,
         end: rental.end_date
       }));
-
-      console.log('Overlapping dates:', overlappingDates);
 
       return res.status(400).json({
         available: false,
@@ -397,7 +412,6 @@ app.post('/api/cars/:id/check-availability', auth, async (req, res) => {
 
     res.json({ available: true });
   } catch (error) {
-    console.error('Error checking car availability:', error);
     res.status(500).json({ error: error.message || 'Failed to check car availability' });
   }
 });
@@ -405,43 +419,24 @@ app.post('/api/cars/:id/check-availability', auth, async (req, res) => {
 // Create rental
 app.post('/api/rentals', auth, async (req, res) => {
   try {
-    console.log('Creating rental with data:', req.body);
-    console.log('User from auth:', req.user);
-
     const { car_id, start_date, end_date, total_price } = req.body;
 
-    // Validate required fields
     if (!car_id || !start_date || !end_date || total_price === undefined) {
-      console.error('Missing required fields:', { car_id, start_date, end_date, total_price });
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    // Validate dates
     const start = new Date(start_date);
     const end = new Date(end_date);
 
-    console.log('Parsed dates:', { start, end });
-
-    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      console.error('Invalid date format received');
-      return res.status(400).json({ error: 'Invalid date format' });
+    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) {
+      return res.status(400).json({ error: 'Invalid date range' });
     }
 
-    if (start >= end) {
-      console.error('End date is not after start date');
-      return res.status(400).json({ error: 'End date must be after start date' });
-    }
-
-    // Validate car exists
     const car = await Car.findById(car_id);
     if (!car) {
-      console.error('Car not found:', car_id);
       return res.status(404).json({ error: 'Car not found' });
     }
 
-    console.log('Found car:', car);
-
-    // Check if car is available
     const overlappingRentals = await Rental.find({
       car_id,
       $or: [
@@ -452,44 +447,31 @@ app.post('/api/rentals', auth, async (req, res) => {
       ]
     });
 
-    console.log('Found overlapping rentals:', overlappingRentals);
-
     if (overlappingRentals.length > 0) {
       return res.status(400).json({ error: 'Car is not available for these dates' });
     }
 
-    // Create rental using authenticated user's ID
-    const rentalData = {
-      client_id: req.user.id, // Use ID from auth token
+    const rental = await Rental.create({
+      client_id: req.user.id,
       car_id,
       start_date: start,
       end_date: end,
       total_price: Number(total_price)
-    };
-
-    console.log('Creating rental with data:', rentalData);
-
-    const rental = await Rental.create(rentalData);
-    console.log('Created rental:', rental);
+    });
 
     const populatedRental = await Rental.findById(rental._id)
       .populate('car_id')
       .populate('client_id');
 
-    console.log('Populated rental:', populatedRental);
-
     res.status(201).json(populatedRental);
   } catch (error) {
-    console.error('Error creating rental:', error);
-    console.error('Error stack:', error.stack);
-    res.status(500).json({ error: error.message || 'Failed to create rental' });
+    res.status(500).json({ error: 'Failed to create rental' });
   }
 });
 
 // Get rentals
 app.get('/api/rentals', auth, async (req, res) => {
   try {
-    console.log('Fetching rentals...');
     const rentals = await Rental.find()
       .populate({
         path: 'car_id',
@@ -501,10 +483,8 @@ app.get('/api/rentals', auth, async (req, res) => {
       })
       .sort({ created_at: -1 });
     
-    console.log('Found rentals:', JSON.stringify(rentals, null, 2));
     res.json(rentals);
   } catch (error) {
-    console.error('Error fetching rentals:', error);
     res.status(500).json({ error: 'Failed to fetch rentals' });
   }
 });
@@ -611,13 +591,10 @@ app.post('/api/signup', [
   body('email')
     .trim()
     .isEmail()
-    .matches(/^[\w-\.]+@gmail\.com$/)
-    .withMessage('Email must be a valid Gmail address'),
+    .withMessage('Email must be a valid email address'),
   body('password').isLength({ min: 6 }),
-  body('phone_number').notEmpty().withMessage('Phone number is required'),
-  body('first_name').notEmpty().withMessage('First name is required'),
-  body('last_name').notEmpty().withMessage('Last name is required'),
-  body('middle_name').notEmpty().withMessage('Middle name is required'),
+  body('first_name').notEmpty(),
+  body('last_name').notEmpty(),
   body('role').isIn(['admin', 'user'])
 ], async (req, res) => {
   try {
@@ -657,7 +634,6 @@ app.post('/api/signup', [
       { expiresIn: '24h' }
     );
 
-    // Return full user information (excluding password)
     const userResponse = {
       id: user._id,
       email: user.email,
@@ -669,7 +645,6 @@ app.post('/api/signup', [
 
     res.status(201).json({ token, user: userResponse });
   } catch (error) {
-    console.error('Signup error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -709,7 +684,6 @@ app.post('/api/login', [
       { expiresIn: '24h' }
     );
 
-    // Return full user information (excluding password)
     const userResponse = {
       id: user._id,
       email: user.email,
@@ -721,7 +695,6 @@ app.post('/api/login', [
 
     res.json({ token, user: userResponse });
   } catch (error) {
-    console.error('Login error:', error);
     res.status(500).json({ error: 'Server error' });
   }
 });
@@ -746,6 +719,26 @@ app.get('/api/verify-token', auth, async (req, res) => {
   } catch (error) {
     console.error('Token verification error:', error);
     res.status(401).json({ error: 'Invalid token' });
+  }
+});
+
+// Delete review endpoint
+app.delete('/api/reviews/:reviewId', auth, async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.reviewId);
+    if (!review) {
+      return res.status(404).json({ error: 'Review not found' });
+    }
+
+    // Only author or admin can delete
+    if (review.client.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    await Review.findByIdAndDelete(req.params.reviewId);
+    res.json({ message: 'Review deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to delete review' });
   }
 });
 

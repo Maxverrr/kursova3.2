@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
 class ApiService {
     static getToken() {
@@ -106,6 +106,13 @@ class ApiService {
         return this.request(`/cars/${id}/reviews`);
     }
 
+    static async createReview(carId, reviewData) {
+        return this.request(`/cars/${carId}/reviews`, {
+            method: 'POST',
+            body: JSON.stringify(reviewData)
+        });
+    }
+
     static async createCar(carData) {
         return this.request('/cars', {
             method: 'POST',
@@ -176,6 +183,12 @@ class ApiService {
         return this.request('/rentals', {
             method: 'POST',
             body: JSON.stringify(rentalData)
+        });
+    }
+
+    static async deleteReview(reviewId) {
+        return this.request(`/reviews/${reviewId}`, {
+            method: 'DELETE'
         });
     }
 }

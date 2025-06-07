@@ -1,12 +1,46 @@
-# React + Vite
+# Car Rental System
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Це повноцінний веб-додаток для оренди автомобілів:
+- **Frontend:** React + Vite
+- **Backend:** Node.js + Express + MongoDB (Mongoose)
 
-Currently, two official plugins are available:
+## Можливості
+- Перегляд, фільтрація та пошук автомобілів
+- Оренда авто з вибором дат
+- Система відгуків (залишати та видаляти відгуки)
+- Адмін-панель для керування автопарком та користувачами
+- Аутентифікація та ролі (user/admin)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Запуск проекту
 
-## Expanding the ESLint configuration
+### 1. Backend
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+cd backend
+npm install
+# Створіть файл .env з вашим MongoDB URI та JWT_SECRET
+npm start
+```
+
+**.env приклад:**
+```
+MONGODB_URI=your_mongodb_atlas_uri
+JWT_SECRET=your_jwt_secret
+```
+
+### 2. Frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Відкрийте [http://localhost:5173](http://localhost:5173) у браузері.
+
+## Важливо
+- Не забудьте додати .env файли у backend та frontend (вони не потрапляють у git)
+- Для продакшн-режиму використовуйте окремий MongoDB Atlas кластер та надійний JWT_SECRET
+
+## Ліцензія
+MIT
