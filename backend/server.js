@@ -13,7 +13,7 @@ const port = process.env.PORT || 10000;
 
 // Middleware
 app.use(cors({
-  origin: ['https://car-rental-frontend-three.vercel.app', 'http://localhost:5173', 'https://kursova3-2.onrender.com'],
+  origin: ['https://car-rental-frontend-three.vercel.app', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
@@ -23,7 +23,7 @@ app.use(express.json());
 
 // Add headers for all responses
 app.use((req, res, next) => {
-  const allowedOrigins = ['https://car-rental-frontend-three.vercel.app', 'http://localhost:5173', 'https://kursova3-2.onrender.com'];
+  const allowedOrigins = ['https://car-rental-frontend-three.vercel.app', 'http://localhost:5173'];
   const origin = req.headers.origin;
   
   if (allowedOrigins.includes(origin)) {
