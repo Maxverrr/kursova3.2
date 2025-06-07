@@ -1,5 +1,7 @@
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 
+console.log('API_URL:', API_URL);
+
 class ApiService {
     static getToken() {
         return localStorage.getItem('token');
@@ -27,6 +29,8 @@ class ApiService {
 
     static async request(endpoint, options = {}) {
         const url = `${API_URL}${endpoint}`;
+        console.log('Making request to:', url);
+
         const headers = {
             'Content-Type': 'application/json',
             ...options.headers
@@ -35,37 +39,38 @@ class ApiService {
         const token = this.getToken();
         if (token) {
             if (this.isTokenExpired(token)) {
-                console.log('Термін дії токена закінчився, очищення токена');
+                console.log('Token expired, clearing token');
                 this.clearToken();
                 window.location.href = '/login';
-                throw new Error('Термін дії токена закінчився');
+                throw new Error('Token expired');
             }
             headers['Authorization'] = `Bearer ${token}`;
         }
 
         try {
-            console.log(`Making request to: ${url}`);
             console.log('Request headers:', headers);
             console.log('Request options:', options);
 
             const response = await fetch(url, {
                 ...options,
-                headers
+                headers,
+                credentials: 'include'
             });
 
-            console.log(`Response status: ${response.status}`);
+            console.log('Response status:', response.status);
             
             if (!response.ok) {
-                const error = await response.json().catch(() => ({ error: 'Виникла невідома помилка' }));
+                const error = await response.json().catch(() => ({ error: 'Unknown error occurred' }));
                 console.error('Response error:', error);
                 if (response.status === 401) {
                     this.clearToken();
                     window.location.href = '/login';
                 }
-                throw new Error(error.error || error.message || 'Помилка запиту');
+                throw new Error(error.error || error.message || 'Request failed');
             }
 
             const data = await response.json();
+            console.log('Response data:', data);
             return data;
         } catch (error) {
             console.error('API request error:', error);

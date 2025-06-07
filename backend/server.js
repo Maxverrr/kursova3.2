@@ -22,6 +22,14 @@ app.use(express.json());
 // Connect to MongoDB
 connectDB();
 
+// Base route
+app.get('/', (req, res) => {
+  res.json({ message: 'API is working' });
+});
+
+// API routes
+const router = express.Router();
+
 // Authentication middleware
 const auth = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
@@ -48,7 +56,7 @@ const isAdmin = (req, res, next) => {
 };
 
 // Reference data endpoints
-app.get('/api/body-types', auth, async (req, res) => {
+router.get('/body-types', auth, async (req, res) => {
   try {
     const bodyTypes = await BodyType.find();
     res.json(bodyTypes);
@@ -58,7 +66,7 @@ app.get('/api/body-types', auth, async (req, res) => {
   }
 });
 
-app.get('/api/classes', auth, async (req, res) => {
+router.get('/classes', auth, async (req, res) => {
   try {
     const classes = await Class.find();
     res.json(classes);
@@ -68,7 +76,7 @@ app.get('/api/classes', auth, async (req, res) => {
   }
 });
 
-app.get('/api/fuel-types', auth, async (req, res) => {
+router.get('/fuel-types', auth, async (req, res) => {
   try {
     const fuelTypes = await FuelType.find();
     res.json(fuelTypes);
@@ -78,7 +86,7 @@ app.get('/api/fuel-types', auth, async (req, res) => {
   }
 });
 
-app.get('/api/statuses', auth, async (req, res) => {
+router.get('/statuses', auth, async (req, res) => {
   try {
     const statuses = await Status.find();
     res.json(statuses);
@@ -89,7 +97,7 @@ app.get('/api/statuses', auth, async (req, res) => {
 });
 
 // Get cars endpoint
-app.get('/api/cars', auth, async (req, res) => {
+router.get('/cars', auth, async (req, res) => {
   try {
     let {
       sortBy = 'name',
@@ -110,10 +118,10 @@ app.get('/api/cars', auth, async (req, res) => {
       available
     } = req.query;
     
-  page = parseInt(page) || 1;
-  limit = parseInt(limit) || 6;
-  if (page < 1) page = 1;
-  if (limit < 1 || limit > 100) limit = 6;
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 6;
+    if (page < 1) page = 1;
+    if (limit < 1 || limit > 100) limit = 6;
 
     const skip = (page - 1) * limit;
     
@@ -181,7 +189,7 @@ app.get('/api/cars', auth, async (req, res) => {
 });
 
 // Get car by ID endpoint
-app.get('/api/cars/:id', auth, async (req, res) => {
+router.get('/cars/:id', auth, async (req, res) => {
   try {
     const car = await Car.findById(req.params.id)
       .populate('body_type')
@@ -201,7 +209,7 @@ app.get('/api/cars/:id', auth, async (req, res) => {
 });
 
 // Add car endpoint
-app.post('/api/cars', [auth, isAdmin], async (req, res) => {
+router.post('/cars', [auth, isAdmin], async (req, res) => {
   try {
     const {
       name,
@@ -245,7 +253,7 @@ app.post('/api/cars', [auth, isAdmin], async (req, res) => {
 });
 
 // Update car endpoint
-app.put('/api/cars/:id', [auth, isAdmin], async (req, res) => {
+router.put('/cars/:id', [auth, isAdmin], async (req, res) => {
   try {
     const {
       name,
@@ -296,7 +304,7 @@ app.put('/api/cars/:id', [auth, isAdmin], async (req, res) => {
 });
 
 // Delete car endpoint
-app.delete('/api/cars/:id', [auth, isAdmin], async (req, res) => {
+router.delete('/cars/:id', [auth, isAdmin], async (req, res) => {
   try {
     const car = await Car.findByIdAndDelete(req.params.id);
     
@@ -312,7 +320,7 @@ app.delete('/api/cars/:id', [auth, isAdmin], async (req, res) => {
 });
 
 // Get reviews for a car
-app.get('/api/cars/:id/reviews', auth, async (req, res) => {
+router.get('/cars/:id/reviews', auth, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid car ID format' });
@@ -332,7 +340,7 @@ app.get('/api/cars/:id/reviews', auth, async (req, res) => {
 });
 
 // Create review for a car
-app.post('/api/cars/:id/reviews', auth, async (req, res) => {
+router.post('/cars/:id/reviews', auth, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
       return res.status(400).json({ error: 'Invalid car ID format' });
@@ -369,7 +377,7 @@ app.post('/api/cars/:id/reviews', auth, async (req, res) => {
 });
 
 // Check car availability
-app.post('/api/cars/:id/check-availability', auth, async (req, res) => {
+router.post('/cars/:id/check-availability', auth, async (req, res) => {
   try {
     const { startDate, endDate } = req.body;
     const carId = req.params.id;
@@ -417,7 +425,7 @@ app.post('/api/cars/:id/check-availability', auth, async (req, res) => {
 });
 
 // Create rental
-app.post('/api/rentals', auth, async (req, res) => {
+router.post('/rentals', auth, async (req, res) => {
   try {
     const { car_id, start_date, end_date, total_price } = req.body;
 
@@ -470,7 +478,7 @@ app.post('/api/rentals', auth, async (req, res) => {
 });
 
 // Get rentals
-app.get('/api/rentals', auth, async (req, res) => {
+router.get('/rentals', auth, async (req, res) => {
   try {
     const rentals = await Rental.find()
       .populate({
@@ -490,7 +498,7 @@ app.get('/api/rentals', auth, async (req, res) => {
 });
 
 // Update rental
-app.put('/api/rentals/:id', auth, async (req, res) => {
+router.put('/rentals/:id', auth, async (req, res) => {
   try {
     const rental = await Rental.findByIdAndUpdate(
       req.params.id,
@@ -512,7 +520,7 @@ app.put('/api/rentals/:id', auth, async (req, res) => {
 });
 
 // Delete rental
-app.delete('/api/rentals/:id', auth, async (req, res) => {
+router.delete('/rentals/:id', auth, async (req, res) => {
   try {
     const rental = await Rental.findByIdAndDelete(req.params.id);
     
@@ -528,7 +536,7 @@ app.delete('/api/rentals/:id', auth, async (req, res) => {
 });
 
 // Users endpoints
-app.get('/api/users', [auth, isAdmin], async (req, res) => {
+router.get('/users', [auth, isAdmin], async (req, res) => {
   try {
     const users = await User.find().select('-password');
     res.json(users);
@@ -538,7 +546,7 @@ app.get('/api/users', [auth, isAdmin], async (req, res) => {
   }
 });
 
-app.get('/api/users/:id', [auth, isAdmin], async (req, res) => {
+router.get('/users/:id', [auth, isAdmin], async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) {
@@ -551,7 +559,7 @@ app.get('/api/users/:id', [auth, isAdmin], async (req, res) => {
   }
 });
 
-app.put('/api/users/:id', [auth, isAdmin], async (req, res) => {
+router.put('/users/:id', [auth, isAdmin], async (req, res) => {
   try {
     const { email, first_name, last_name, middle_name, phone_number, role } = req.body;
     const user = await User.findByIdAndUpdate(
@@ -571,7 +579,7 @@ app.put('/api/users/:id', [auth, isAdmin], async (req, res) => {
   }
 });
 
-app.delete('/api/users/:id', [auth, isAdmin], async (req, res) => {
+router.delete('/users/:id', [auth, isAdmin], async (req, res) => {
   try {
     const user = await User.findByIdAndDelete(req.params.id);
     
@@ -587,7 +595,7 @@ app.delete('/api/users/:id', [auth, isAdmin], async (req, res) => {
 });
 
 // Auth routes
-app.post('/api/signup', [
+router.post('/signup', [
   body('email')
     .trim()
     .isEmail()
@@ -649,7 +657,7 @@ app.post('/api/signup', [
   }
 });
 
-app.post('/api/login', [
+router.post('/login', [
   body('email').trim().notEmpty(),
   body('password').notEmpty()
 ], async (req, res) => {
@@ -700,7 +708,7 @@ app.post('/api/login', [
 });
 
 // Token verification endpoint
-app.get('/api/verify-token', auth, async (req, res) => {
+router.get('/verify-token', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
@@ -723,7 +731,7 @@ app.get('/api/verify-token', auth, async (req, res) => {
 });
 
 // Delete review endpoint
-app.delete('/api/reviews/:reviewId', auth, async (req, res) => {
+router.delete('/reviews/:reviewId', auth, async (req, res) => {
   try {
     const review = await Review.findById(req.params.reviewId);
     if (!review) {
@@ -741,6 +749,9 @@ app.delete('/api/reviews/:reviewId', auth, async (req, res) => {
     res.status(500).json({ error: 'Failed to delete review' });
   }
 });
+
+// Mount all routes under /api
+app.use('/api', router);
 
 app.listen(port, () => {
   console.log(`Server is running on port ${port}`);
