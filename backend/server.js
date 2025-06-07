@@ -8,17 +8,36 @@ const { User, BodyType, Class, FuelType, Status, Car, Review, Rental } = require
 const mongoose = require('mongoose');
 require('dotenv').config();
 
+const API_URL = 'https://kursova2-2.onrender.com/api';
 const app = express();
 const port = process.env.PORT || 10000;
 
 // Middleware
 app.use(cors({
-  origin: '*', // Allow all origins
+  origin: ['https://car-rental-frontend-three.vercel.app', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 app.use(express.json());
+
+// Add headers for all responses
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', 'https://car-rental-frontend-three.vercel.app');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Credentials', true);
+  
+  // Handle OPTIONS method
+  if (req.method === 'OPTIONS') {
+    return res.status(200).json({
+      body: "OK"
+    });
+  }
+  
+  next();
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -805,7 +824,10 @@ connectDB()
     // Start server
     app.listen(port, () => {
       console.log(`Server is running on port ${port}`);
-      console.log(`Test the API at: http://localhost:${port}/api/health`);
+      const baseUrl = process.env.NODE_ENV === 'production' 
+        ? 'https://kursova2-2.onrender.com'
+        : `http://localhost:${port}`;
+      console.log(`Test the API at: ${baseUrl}/api/health`);
     });
   })
   .catch(error => {
