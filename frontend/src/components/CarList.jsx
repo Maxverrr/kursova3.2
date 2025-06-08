@@ -1,17 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import ApiService from '../services/api';
 import CarForm from './CarForm';
 import FilterForm from './FilterForm';
 
 const CarList = () => {
+    const [searchParams, setSearchParams] = useSearchParams();
     const [cars, setCars] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filter, setFilter] = useState('');
-    const [page, setPage] = useState(1);
+    const [page, setPage] = useState(parseInt(searchParams.get('page') || '1'));
     const [sortBy, setSortBy] = useState('name');
     const [order, setOrder] = useState('ASC');
     const { user } = useAuth();
@@ -27,6 +28,10 @@ const CarList = () => {
 
         return () => clearTimeout(timer);
     }, [searchTerm]);
+
+    useEffect(() => {
+        setSearchParams({ page: page.toString() });
+    }, [page, setSearchParams]);
 
     const formatFilterValue = (key, value) => {
         if (key.endsWith('Name')) return null; 
@@ -323,7 +328,7 @@ const CarList = () => {
                         {/* Hover Animation Stripe with Details Link */}
                         <div className="absolute inset-x-0 bottom-0 h-0 group-hover:h-24 bg-gradient-to-t from-black/90 to-black/70 transition-all duration-300 ease-out flex items-center justify-center">
                             <Link 
-                                to={`/cars/${car._id}`} 
+                                to={`/cars/${car._id}?returnPage=${page}`}
                                 className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-full text-white font-medium"
                             >       
                                 Детальніше

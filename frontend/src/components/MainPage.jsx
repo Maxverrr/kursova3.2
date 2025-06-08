@@ -18,7 +18,7 @@ const MainPage = () => {
       <div className="relative z-10 min-h-screen flex items-center justify-center">
         <div className="absolute top-[55%]">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate('/MainApp')}
             className="px-8 py-4 bg-white text-black text-4xl font-bold rounded-lg hover:bg-gray-200 transition-all transform hover:scale-105 shadow-xl"
           >
             Орендувати автомобіль зараз

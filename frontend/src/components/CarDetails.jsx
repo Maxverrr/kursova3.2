@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom';
 import ApiService from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import CarForm from './CarForm';
@@ -9,6 +9,8 @@ import { uk } from 'date-fns/locale';
 
 const CarDetails = () => {
     const { id } = useParams();
+    const [searchParams] = useSearchParams();
+    const returnPage = searchParams.get('returnPage') || '1';
     const navigate = useNavigate();
     const { user } = useAuth();
     const [car, setCar] = useState(null);
@@ -229,7 +231,7 @@ const CarDetails = () => {
         <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900">
             <div className="container mx-auto px-4 pt-24 pb-8">
                 <Link 
-                    to="/"
+                    to={`/MainApp?page=${returnPage}`}
                     className="inline-block mb-8 px-6 py-2 bg-gray-700 text-white rounded-full hover:bg-gray-600 transition-colors"
                 >
                     ← Назад до списку
