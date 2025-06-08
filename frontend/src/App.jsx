@@ -5,7 +5,7 @@ import Signup from './components/Signup.jsx';
 import MainApp from './components/MainApp.jsx';
 import UsersPage from './components/UsersPage.jsx';
 import RentalsPage from './components/RentalsPage.jsx';
-import MyRentalsPage from './components/MyRentalsPage.jsx';
+import UserRentalsPage from './components/UserRentalsPage.jsx';
 import SupportPage from './components/SupportPage.jsx';
 import { AuthProvider } from './context/AuthContext';
 import './App.css';
@@ -39,7 +39,7 @@ function App() {
           } />
           <Route path="/my-rentals" element={
             <PrivateRoute>
-              <MyRentalsPage />
+              <UserRentalsPage />
             </PrivateRoute>
           } />
           <Route path="/support" element={
