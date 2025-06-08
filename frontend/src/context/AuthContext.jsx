@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 import { jwtDecode } from 'jwt-decode';
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -48,7 +50,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post('http://localhost:3001/api/login', {
+            const response = await axios.post(`${API_URL}/login`, {
                 email,
                 password,
             });
@@ -69,7 +71,7 @@ export const AuthProvider = ({ children }) => {
 
     const signup = async (userData) => {
         try {
-            const response = await axios.post('http://localhost:3001/api/signup', userData);
+            const response = await axios.post(`${API_URL}/signup`, userData);
             localStorage.setItem('token', response.data.token);
             setUser({
                 id: response.data.user.id,
