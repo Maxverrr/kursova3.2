@@ -12,7 +12,11 @@ const port = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors({
-  origin: true, // Allow all origins in development
+  origin: [
+    'https://kursova3-2.vercel.app',
+    'http://localhost:5173', // For local development
+    'http://localhost:3000'  // For local development
+  ],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true
@@ -740,6 +744,10 @@ app.delete('/api/reviews/:reviewId', auth, async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: 'Failed to delete review' });
   }
+});
+
+app.get('/', (req, res) => {
+    res.send('BurundukGarage API is running!');
 });
 
 app.listen(port, () => {
