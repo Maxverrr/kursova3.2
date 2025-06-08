@@ -19,12 +19,12 @@ const Header = () => {
       <nav className="flex items-center px-6 flex-wrap">
         {/* Left section */}
         <div className="w-1/4 flex-shrink-0 min-w-fit">
-          <a href="/main" className="text-3xl font-medium hover:text-gray-300">Головна</a>
+          <Link to="/mainpage" className="text-3xl font-medium hover:text-gray-300">Головна</Link>
         </div>
 
         {/* Center section */}
         <div className="flex-1 flex justify-center items-center space-x-8 min-w-fit">
-          <a href="/" className="text-3xl font-medium hover:text-gray-300">Автопарк</a>
+          <Link to="/" className="text-3xl font-medium hover:text-gray-300">Автопарк</Link>
         </div>
 
         {/* Right section */}
@@ -129,22 +129,6 @@ function MainApp() {
       <Header />
       <Routes>
         <Route
-          path="/main"
-          element={
-            <ProtectedRoute>
-              <MainPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/support"
-          element={
-            <ProtectedRoute>
-              <SupportPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/"
           element={
             <ProtectedRoute>
@@ -153,10 +137,10 @@ function MainApp() {
           }
         />
         <Route
-          path="/cars/:id"
+          path="/support"
           element={
             <ProtectedRoute>
-              <CarDetails />
+              <SupportPage />
             </ProtectedRoute>
           }
         />
@@ -181,6 +165,14 @@ function MainApp() {
           element={
             <ProtectedRoute>
               <UserRentalsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cars/:id"
+          element={
+            <ProtectedRoute>
+              <CarDetails />
             </ProtectedRoute>
           }
         />
