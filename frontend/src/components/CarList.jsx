@@ -176,7 +176,7 @@ const CarList = () => {
                         </Link>
                         <div className="absolute inset-x-0 bottom-0 h-0 group-hover:h-14 bg-gradient-to-t from-black/90 to-black/70 transition-all duration-300 flex items-center justify-center">
                             <Link
-                            to="/cars/683ed7492979b884fda5ed4d"
+                            to="/cars/683ed7492979b884fda5ed51"
                             className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150 px-6 py-2 bg-orange-900 rounded-full text-white font-medium"
                             >
                             Орендувати
