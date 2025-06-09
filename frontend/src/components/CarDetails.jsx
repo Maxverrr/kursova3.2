@@ -332,11 +332,47 @@ const CarDetails = () => {
                     <div className="border-t border-gray-700">
                         <div className="p-6">
                             <h2 className="text-2xl font-bold text-white mb-6">Відгуки</h2>
-                            {reviews.length === 0 ? (
-                                <p className="text-gray-400">Поки що немає відгуків про цей автомобіль</p>
-                            ) : (
-                                <div className="space-y-6">
-                                    {reviews.map(review => (
+                            
+                            {/* Add Review Form */}
+                            {user && (
+                                <form 
+                                    onSubmit={async (e) => {
+                                        e.preventDefault();
+                                        const comment = e.target.comment.value;
+                                        if (!comment.trim()) return;
+                                        
+                                        try {
+                                            const newReview = await ApiService.createReview(id, { comment });
+                                            setReviews([newReview, ...reviews]);
+                                            e.target.reset();
+                                        } catch (err) {
+                                            alert(err.message || 'Помилка при додаванні відгуку');
+                                        }
+                                    }}
+                                    className="mb-8 bg-gray-700/30 p-4 rounded-lg"
+                                >
+                                    <div className="flex flex-col sm:flex-row gap-4">
+                                        <textarea
+                                            name="comment"
+                                            placeholder="Напишіть свій відгук..."
+                                            className="flex-1 bg-gray-700 text-white rounded-lg p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            required
+                                        />
+                                        <button
+                                            type="submit"
+                                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors h-fit self-end"
+                                        >
+                                            Додати відгук
+                                        </button>
+                                    </div>
+                                </form>
+                            )}
+
+                            <div className="space-y-6">
+                                {reviews.length === 0 ? (
+                                    <p className="text-gray-400">Поки що немає відгуків про цей автомобіль</p>
+                                ) : (
+                                    reviews.map(review => (
                                         <div key={review._id} className="bg-gray-700/50 rounded-lg p-4">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>
@@ -356,9 +392,9 @@ const CarDetails = () => {
                                             </div>
                                             <p className="text-gray-300">{review.comment}</p>
                                         </div>
-                                    ))}
-                                </div>
-                            )}
+                                    ))
+                                )}
+                            </div>
                         </div>
                     </div>
                 </div>

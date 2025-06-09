@@ -80,8 +80,8 @@ function CarManagement() {
 
 function MainApp() {
   return (
-    <Routes>
-      <Route
+      <Routes>
+        <Route
         path="/"
         element={
           <ProtectedRoute>
@@ -91,44 +91,44 @@ function MainApp() {
       />
       <Route
         path="/mainpage"
-        element={
-          <ProtectedRoute>
-            <MainPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/support"
-        element={
-          <ProtectedRoute>
-            <SupportPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/users"
-        element={
-          <ProtectedRoute adminOnly={true}>
-            <UsersPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/rentals"
-        element={
-          <ProtectedRoute adminOnly={true}>
-            <RentalsPage />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/my-rentals"
-        element={
-          <ProtectedRoute>
-            <UserRentalsPage />
-          </ProtectedRoute>
-        }
-      />
+          element={
+            <ProtectedRoute>
+              <MainPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/support"
+          element={
+            <ProtectedRoute>
+              <SupportPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/users"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <UsersPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/rentals"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <RentalsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-rentals"
+          element={
+            <ProtectedRoute>
+              <UserRentalsPage />
+            </ProtectedRoute>
+          }
+        />
       <Route
         path="/cars/:id"
         element={
@@ -137,7 +137,7 @@ function MainApp() {
           </ProtectedRoute>
         }
       />
-    </Routes>
+      </Routes>
   );
 }
 

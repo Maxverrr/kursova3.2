@@ -267,7 +267,7 @@ const CarList = () => {
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {cars.map(car => (
-                    <div key={car._id} className="relative aspect-[16/9.924] rounded-lg shadow-lg overflow-hidden group">
+                    <div key={car._id} className="relative w-full aspect-[16/9.924] rounded-lg shadow-lg overflow-hidden group">
                         {/* Background Image */}
                         <div 
                             className="absolute inset-0 bg-cover bg-center"
@@ -286,16 +286,16 @@ const CarList = () => {
                         </div>
 
                         {/* Dark Overlay - Right */}
-                        <div className="absolute top-0 right-0 h-full bg-black/50" style={{ width: '23.2%' }} />
+                        <div className="absolute top-0 right-0 h-full bg-black/50 w-[23.2%]" />
                         
                         {/* Dark Overlay - Top */}
-                        <div className="absolute top-0 left-0 right-0 h-16 bg-black/50" />
+                        <div className="absolute top-0 left-0 right-0 h-[17.5%] bg-black/50" />
 
                         {/* Content */}
-                        <div className="relative h-full p-6 flex flex-col justify-between">
+                        <div className="relative h-full p-[3%] flex flex-col justify-between">
                             <div className="flex justify-between items-start">
-                                <h3 className="text-3xl font-bold text-white">{car.name}</h3>
-                                <span className={`px-3 py-1 rounded-full text-sm ${
+                                <h3 className="text-[min(2.2vw,1.9rem)] font-bold text-white">{car.name}</h3>
+                                <span className={`px-[2.5%] py-[0.7%] rounded-full text-[min(1vw,0.9rem)] ${
                                     car.status?.status ? 'bg-green-800/80 text-green-200' : 'bg-red-800/80 text-red-200'
                                 }`}>
                                     {car.status?.status ? 'Доступний' : 'Недоступний'}
@@ -304,32 +304,32 @@ const CarList = () => {
 
                             {/* Car Specs */}
                             <div className="flex justify-end">
-                                <div className="space-y-4">
+                                <div className="space-y-[0.01%]">
                                     <div className="text-right">
-                                        <p className="text-4xl font-bold">{car.horsepower}</p>
-                                        <p className="text-sm opacity-80">к.с.</p>
+                                        <p className="text-[min(3vw,2.2rem)] font-bold text-white">{car.horsepower}</p>
+                                        <p className="text-[min(1vw,0.9rem)] text-white opacity-80">к.с.</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-4xl">{Number(car.engine_volume).toFixed(1)}</p>
-                                        <p className="text-sm opacity-80">Об'єм двигуна</p>
+                                        <p className="text-[min(3vw,2.1rem)] text-white">{Number(car.engine_volume).toFixed(1)}</p>
+                                        <p className="text-[min(1vw,0.9rem)] text-white opacity-80">Об'єм двигуна</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-4xl">{car.fuel_consumption}</p>
-                                        <p className="text-sm opacity-80">Розхід палива</p>
+                                        <p className="text-[min(3vw,2.1rem)] text-white">{car.fuel_consumption}</p>
+                                        <p className="text-[min(1vw,0.9rem)] text-white opacity-80">Розхід палива</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-4xl font-bold">{car.price_per_day}₴</p>
-                                        <p className="text-sm opacity-80">/день</p>
+                                        <p className="text-[min(3vw,2.1rem)] font-bold text-white">{car.price_per_day}₴</p>
+                                        <p className="text-[min(1vw,0.9rem)] text-white opacity-80">/день</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Hover Animation Stripe with Details Link */}
-                        <div className="absolute inset-x-0 bottom-0 h-0 group-hover:h-24 bg-gradient-to-t from-black/90 to-black/70 transition-all duration-300 ease-out flex items-center justify-center">
+                        <div className="absolute inset-x-0 bottom-0 h-0 group-hover:h-[22%] bg-gradient-to-t from-black/90 to-black/70 transition-all duration-300 ease-out flex items-center justify-center">
                             <Link 
                                 to={`/cars/${car._id}?returnPage=${page}`}
-                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150 px-6 py-2 bg-blue-600 hover:bg-blue-700 rounded-full text-white font-medium"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150 px-[3%] py-[1%] bg-blue-600 hover:bg-blue-700 rounded-full text-white text-[min(1.2vw,0.875rem)] font-medium"
                             >       
                                 Детальніше
                             </Link>
