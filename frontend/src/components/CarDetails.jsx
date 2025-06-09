@@ -192,7 +192,7 @@ const CarDetails = () => {
             // Close modal and show success message
             setIsRentModalOpen(false);
             alert('Оренду успішно оформлено!');
-            navigate('/rentals');
+            navigate('/my-rentals');
         } catch (err) {
             console.error('Rental submission error:', err);
             setRentError(err.message || 'Сталася помилка при оформленні оренди. Спробуйте ще раз.');

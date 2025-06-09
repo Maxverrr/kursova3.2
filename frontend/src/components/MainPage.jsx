@@ -4,18 +4,16 @@ const MainPage = () => {
   const navigate = useNavigate();
 
   return (
-    //Фон
-    <div className="relative min-h-screen w-full">
+    <div className="fixed inset-0 overflow-hidden">
       <div 
-        className="fixed top-0 left-0 w-full h-full bg-cover bg-center bg-no-repeat bg-fixed"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ 
           backgroundImage: 'url("/img/main.jpeg")',
           zIndex: -1
         }}
       />
       
-      {/*Кнопка*/}
-      <div className="relative z-10 min-h-screen flex items-center justify-center">
+      <div className="relative z-10 h-full flex items-center justify-center">
         <div className="absolute top-[55%]">
           <button
             onClick={() => navigate('/MainApp')}

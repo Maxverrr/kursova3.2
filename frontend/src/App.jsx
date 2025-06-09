@@ -13,9 +13,19 @@ import CarDetails from './components/CarDetails.jsx';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
-const PrivateRoute = ({ children }) => {
+const PrivateRoute = ({ children, adminOnly = false }) => {
+  const { user } = useAuth();
   const token = localStorage.getItem('token');
-  return token ? children : <Navigate to="/login" />;
+
+  if (!token) {
+    return <Navigate to="/login" />;
+  }
+
+  if (adminOnly && (!user || user.role !== 'admin')) {
+    return <Navigate to="/" />;
+  }
+
+  return children;
 };
 
 function AppContent() {
@@ -47,12 +57,12 @@ function AppContent() {
           </PrivateRoute>
         } />
         <Route path="/users" element={
-          <PrivateRoute>
+          <PrivateRoute adminOnly={true}>
             <UsersPage />
           </PrivateRoute>
         } />
         <Route path="/rentals" element={
-          <PrivateRoute>
+          <PrivateRoute adminOnly={true}>
             <RentalsPage />
           </PrivateRoute>
         } />
