@@ -13,7 +13,8 @@ const port = process.env.PORT || 3001;
 // Middleware
 app.use(cors({
   origin: [
-    'https://kursova3-2.vercel.app',
+    'https://burundukgarage.vercel.app',
+    'https://kursova3-2.onrender.com',
     'http://localhost:5173', // For local development
     'http://localhost:3000'  // For local development
   ],
