@@ -19,6 +19,7 @@ const CarDetails = () => {
     const [error, setError] = useState(null);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isRentModalOpen, setIsRentModalOpen] = useState(false);
+    const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
     const [rentDates, setRentDates] = useState({
         startDate: null,
         endDate: null
@@ -31,32 +32,46 @@ const CarDetails = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                const [carData, reviewsData] = await Promise.all([
-                    ApiService.getCar(id),
-                    ApiService.getCarReviews(id)
-                ]);
-                setCar(carData);
-                setReviews(reviewsData);
+                setError(null);
 
-                // Fetch existing rentals for this car
-                const rentalsResponse = await ApiService.getRentals();
-                const carRentals = rentalsResponse.filter(rental => 
-                    rental.car_id && rental.car_id._id === id
-                );
-                setExistingRentals(carRentals.map(rental => ({
-                    start: new Date(rental.start_date),
-                    end: new Date(rental.end_date)
-                })));
-            } catch (err) {
-                console.error('Error fetching data:', err);
-                setError(err.message || 'Помилка при завантаженні даних');
+                // Fetch basic car data and reviews (these should be public)
+                try {
+                    const [carData, reviewsData] = await Promise.all([
+                        ApiService.getCar(id),
+                        ApiService.getCarReviews(id)
+                    ]);
+                    setCar(carData);
+                    setReviews(reviewsData);
+                } catch (err) {
+                    console.error('Error fetching car data:', err);
+                    setError(err.message || 'Помилка при завантаженні даних автомобіля');
+                    return;
+                }
+
+                // Only fetch rentals if user is authenticated
+                if (user) {
+                    try {
+                        const rentalsResponse = await ApiService.getRentals();
+                        const carRentals = rentalsResponse.filter(rental => 
+                            rental.car_id && rental.car_id._id === id
+                        );
+                        setExistingRentals(carRentals.map(rental => ({
+                            start: new Date(rental.start_date),
+                            end: new Date(rental.end_date)
+                        })));
+                    } catch (err) {
+                        console.error('Error fetching rentals:', err);
+                        // Don't set error state for rentals fetch failure
+                        // Just log it since it's not critical for viewing car details
+                    }
+                }
             } finally {
                 setLoading(false);
             }
         };
 
         fetchData();
-    }, [id]);
+    }, [id, user]);
 
     const formatDate = (dateString) => {
         const date = new Date(dateString);
@@ -302,7 +317,13 @@ const CarDetails = () => {
 
                             {car.status?.status && (
                                 <button 
-                                    onClick={() => setIsRentModalOpen(true)}
+                                    onClick={() => {
+                                        if (!user) {
+                                            setIsAuthModalOpen(true);
+                                            return;
+                                        }
+                                        setIsRentModalOpen(true);
+                                    }}
                                     className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-lg font-semibold"
                                 >
                                     Орендувати
@@ -494,6 +515,43 @@ const CarDetails = () => {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Auth Modal */}
+            {isAuthModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div className="bg-gray-800 rounded-lg w-full max-w-md p-6">
+                        <div className="flex justify-between items-center mb-4">
+                            <h2 className="text-xl font-bold text-white">Необхідна авторизація</h2>
+                            <button
+                                onClick={() => setIsAuthModalOpen(false)}
+                                className="text-gray-400 hover:text-gray-200"
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <p className="text-gray-300 mb-6">
+                            Щоб орендувати автомобіль, будь ласка, увійдіть до свого облікового запису.
+                        </p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => setIsAuthModalOpen(false)}
+                                className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
+                            >
+                                Закрити
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setIsAuthModalOpen(false);
+                                    navigate('/login');
+                                }}
+                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500"
+                            >
+                                Увійти
+                            </button>
                         </div>
                     </div>
                 </div>
