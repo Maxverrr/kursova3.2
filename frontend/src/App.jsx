@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import Login from './components/Login.jsx';
 import Signup from './components/Signup.jsx';
 import MainApp from './components/MainApp.jsx';
@@ -14,14 +14,17 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import './App.css';
 
 const PrivateRoute = ({ children, adminOnly = false }) => {
-  const { user } = useAuth();
-  const token = localStorage.getItem('token');
+  const { user, loading } = useAuth();
 
-  if (!token) {
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
     return <Navigate to="/login" />;
   }
 
-  if (adminOnly && (!user || user.role !== 'admin')) {
+  if (adminOnly && user.role !== 'admin') {
     return <Navigate to="/" />;
   }
 
@@ -30,32 +33,32 @@ const PrivateRoute = ({ children, adminOnly = false }) => {
 
 function AppContent() {
   const { user } = useAuth();
+  const location = useLocation();
   
-  // Не показуємо хедер на сторінках логіну та реєстрації
-  const showHeader = user && !['/login', '/signup'].includes(window.location.pathname);
+  // Показуємо хедер завжди, крім сторінок логіну та реєстрації
+  const showHeader = !['/login', '/signup'].includes(location.pathname);
 
   return (
     <>
       {showHeader && <Header />}
       <Routes>
+        {/* Public routes */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
-        <Route path="/" element={<Navigate to="/mainpage" />} />
-        <Route path="/mainpage" element={
+        <Route path="/" element={<Navigate to="/MainApp" />} />
+        <Route path="/MainApp" element={<MainApp />} />
+        <Route path="/cars/:id" element={<CarDetails />} />
+        <Route path="/mainpage" element={<MainPage />} />
+        <Route path="/support" element={<SupportPage />} />
+
+        {/* Protected routes */}
+        <Route path="/my-rentals" element={
           <PrivateRoute>
-            <MainPage />
+            <UserRentalsPage />
           </PrivateRoute>
         } />
-        <Route path="/MainApp" element={
-          <PrivateRoute>
-            <MainApp />
-          </PrivateRoute>
-        } />
-        <Route path="/cars/:id" element={
-          <PrivateRoute>
-            <CarDetails />
-          </PrivateRoute>
-        } />
+
+        {/* Admin-only routes */}
         <Route path="/users" element={
           <PrivateRoute adminOnly={true}>
             <UsersPage />
@@ -64,16 +67,6 @@ function AppContent() {
         <Route path="/rentals" element={
           <PrivateRoute adminOnly={true}>
             <RentalsPage />
-          </PrivateRoute>
-        } />
-        <Route path="/my-rentals" element={
-          <PrivateRoute>
-            <UserRentalsPage />
-          </PrivateRoute>
-        } />
-        <Route path="/support" element={
-          <PrivateRoute>
-            <SupportPage />
           </PrivateRoute>
         } />
       </Routes>

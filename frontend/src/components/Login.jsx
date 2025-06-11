@@ -25,7 +25,7 @@ const Login = () => {
 
         try {
             await login(formData.email, formData.password);
-            navigate('/mainpage');
+            navigate('/MainApp?page=1');
         } catch (err) {
             setError(err.message || 'Помилка під час входу в систему');
         }

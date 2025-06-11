@@ -36,10 +36,12 @@ export const AuthProvider = ({ children }) => {
                 } else if (token) {
                     // Token exists but is expired
                     localStorage.removeItem('token');
+                    setUser(null);
                 }
             } catch (error) {
                 console.error('Auth initialization error:', error);
                 localStorage.removeItem('token');
+                setUser(null);
             } finally {
                 setLoading(false);
             }
@@ -97,7 +99,8 @@ export const AuthProvider = ({ children }) => {
         login,
         signup,
         logout,
-        loading
+        loading,
+        isAuthenticated: !!user
     };
 
     if (loading) {

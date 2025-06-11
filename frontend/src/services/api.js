@@ -37,7 +37,9 @@ class ApiService {
             if (this.isTokenExpired(token)) {
                 console.log('Термін дії токена закінчився, очищення токена');
                 this.clearToken();
-                window.location.href = '/login';
+                if (!endpoint.startsWith('/cars/') || options.method !== 'GET') {
+                    window.location.href = '/login';
+                }
                 throw new Error('Термін дії токена закінчився');
             }
             headers['Authorization'] = `Bearer ${token}`;
@@ -53,7 +55,9 @@ class ApiService {
                 const error = await response.json().catch(() => ({ error: 'Виникла невідома помилка' }));
                 if (response.status === 401) {
                     this.clearToken();
-                    window.location.href = '/login';
+                    if (!endpoint.startsWith('/cars/') || options.method !== 'GET') {
+                        window.location.href = '/login';
+                    }
                 }
                 throw new Error(error.error || error.message || 'Помилка запиту');
             }

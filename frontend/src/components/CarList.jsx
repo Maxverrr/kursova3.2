@@ -21,6 +21,17 @@ const CarList = () => {
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [activeFilters, setActiveFilters] = useState({});
 
+    // Add event listener for car list updates
+    useEffect(() => {
+        const handleCarListUpdate = () => {
+            console.log('Car list update event received');
+            fetchCars();
+        };
+
+        window.addEventListener('carListUpdated', handleCarListUpdate);     
+        return () => { window.removeEventListener('carListUpdated', handleCarListUpdate);};
+    }, []);
+
     useEffect(() => {
         const timer = setTimeout(() => {
             setFilter(searchTerm);

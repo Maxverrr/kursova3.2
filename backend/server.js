@@ -6,6 +6,7 @@ const { body, validationResult } = require('express-validator');
 const connectDB = require('./config/database');
 const { User, BodyType, Class, FuelType, Status, Car, Review, Rental } = require('./models');
 const mongoose = require('mongoose');
+const { uploadImageFromUrl } = require('./utils/imageKit');
 
 const app = express();
 const port = process.env.PORT || 3001;
@@ -32,7 +33,7 @@ const auth = (req, res, next) => {
   const token = req.header('Authorization')?.replace('Bearer ', '');
   
   if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
+    return res.status(401).json({ error: 'Токен не надано' });
   }
 
   try {
@@ -40,61 +41,61 @@ const auth = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (error) {
-    res.status(401).json({ error: 'Invalid token' });
+    res.status(401).json({ error: 'Недійсний токен' });
   }
 };
 
 // Admin middleware
 const isAdmin = (req, res, next) => {
   if (req.user.role !== 'admin') {
-    return res.status(403).json({ error: 'Admin access required' });
+    return res.status(403).json({ error: 'Потрібні права адміністратора' });
   }
   next();
 };
 
-// Reference data endpoints
-app.get('/api/body-types', auth, async (req, res) => {
+// Public reference data endpoints
+app.get('/api/body-types', async (req, res) => {
   try {
     const bodyTypes = await BodyType.find();
     res.json(bodyTypes);
   } catch (error) {
-    console.error('Error fetching body types:', error);
-    res.status(500).json({ error: 'Failed to fetch body types' });
+    console.error('Помилка отримання типів кузова:', error);
+    res.status(500).json({ error: 'Не вдалося отримати типи кузова' });
   }
 });
 
-app.get('/api/classes', auth, async (req, res) => {
+app.get('/api/classes', async (req, res) => {
   try {
     const classes = await Class.find();
     res.json(classes);
   } catch (error) {
-    console.error('Error fetching classes:', error);
-    res.status(500).json({ error: 'Failed to fetch classes' });
+    console.error('Помилка отримання класів:', error);
+    res.status(500).json({ error: 'Не вдалося отримати класи' });
   }
 });
 
-app.get('/api/fuel-types', auth, async (req, res) => {
+app.get('/api/fuel-types', async (req, res) => {
   try {
     const fuelTypes = await FuelType.find();
     res.json(fuelTypes);
   } catch (error) {
-    console.error('Error fetching fuel types:', error);
-    res.status(500).json({ error: 'Failed to fetch fuel types' });
+    console.error('Помилка отримання типів палива:', error);
+    res.status(500).json({ error: 'Не вдалося отримати типи палива' });
   }
 });
 
-app.get('/api/statuses', auth, async (req, res) => {
+app.get('/api/statuses', async (req, res) => {
   try {
     const statuses = await Status.find();
     res.json(statuses);
   } catch (error) {
-    console.error('Error fetching statuses:', error);
-    res.status(500).json({ error: 'Failed to fetch statuses' });
+    console.error('Помилка отримання статусів:', error);
+    res.status(500).json({ error: 'Не вдалося отримати статуси' });
   }
 });
 
-// Get cars endpoint
-app.get('/api/cars', auth, async (req, res) => {
+// Public cars endpoints
+app.get('/api/cars', async (req, res) => {
   try {
     let {
       sortBy = 'name',
@@ -115,10 +116,10 @@ app.get('/api/cars', auth, async (req, res) => {
       available
     } = req.query;
     
-  page = parseInt(page) || 1;
-  limit = parseInt(limit) || 6;
-  if (page < 1) page = 1;
-  if (limit < 1 || limit > 100) limit = 6;
+    page = parseInt(page) || 1;
+    limit = parseInt(limit) || 6;
+    if (page < 1) page = 1;
+    if (limit < 1 || limit > 100) limit = 6;
 
     const skip = (page - 1) * limit;
     
@@ -185,8 +186,8 @@ app.get('/api/cars', auth, async (req, res) => {
   }
 });
 
-// Get car by ID endpoint
-app.get('/api/cars/:id', auth, async (req, res) => {
+// Public car details endpoint
+app.get('/api/cars/:id', async (req, res) => {
   try {
     const car = await Car.findById(req.params.id)
       .populate('body_type')
@@ -195,13 +196,13 @@ app.get('/api/cars/:id', auth, async (req, res) => {
       .populate('status');
 
     if (!car) {
-      return res.status(404).json({ error: 'Car not found' });
+      return res.status(404).json({ error: 'Автомобіль не знайдено' });
     }
 
     res.json(car);
   } catch (error) {
     console.error('Error fetching car:', error);
-    res.status(500).json({ error: 'Failed to fetch car details' });
+    res.status(500).json({ error: 'Failed to fetch car' });
   }
 });
 
@@ -222,6 +223,16 @@ app.post('/api/cars', [auth, isAdmin], async (req, res) => {
       photo
     } = req.body;
 
+    // Upload image to ImageKit
+    let imagekitUrl;
+    try {
+      const fileName = `${name.replace(/\s+/g, '-')}-${Date.now()}`;
+      imagekitUrl = await uploadImageFromUrl(photo, fileName);
+    } catch (error) {
+      console.error('Помилка завантаження в ImageKit:', error);
+      return res.status(500).json({ error: 'Не вдалося завантажити зображення в ImageKit' });
+    }
+
     const car = await Car.create({
       name,
       body_type: body_type_id,
@@ -233,7 +244,7 @@ app.post('/api/cars', [auth, isAdmin], async (req, res) => {
       color,
       price_per_day,
       status: status_id,
-      photo
+      photo: imagekitUrl
     });
 
     const populatedCar = await Car.findById(car._id)
@@ -244,8 +255,8 @@ app.post('/api/cars', [auth, isAdmin], async (req, res) => {
 
     res.status(201).json(populatedCar);
   } catch (error) {
-    console.error('Error creating car:', error);
-    res.status(500).json({ error: 'Failed to create car' });
+    console.error('Помилка створення автомобіля:', error);
+    res.status(500).json({ error: 'Не вдалося створити автомобіль' });
   }
 });
 
@@ -266,6 +277,19 @@ app.put('/api/cars/:id', [auth, isAdmin], async (req, res) => {
       photo
     } = req.body;
 
+    // Upload image to ImageKit if photo URL has changed
+    let imagekitUrl = photo;
+    const existingCar = await Car.findById(req.params.id);
+    if (existingCar && existingCar.photo !== photo) {
+      try {
+        const fileName = `${name.replace(/\s+/g, '-')}-${Date.now()}`;
+        imagekitUrl = await uploadImageFromUrl(photo, fileName);
+      } catch (error) {
+        console.error('Помилка завантаження в ImageKit:', error);
+        return res.status(500).json({ error: 'Не вдалося завантажити зображення в ImageKit' });
+      }
+    }
+
     const car = await Car.findByIdAndUpdate(
       req.params.id,
       {
@@ -279,7 +303,7 @@ app.put('/api/cars/:id', [auth, isAdmin], async (req, res) => {
         color,
         price_per_day,
         status: status_id,
-        photo,
+        photo: imagekitUrl,
         last_modified: Date.now()
       },
       { new: true }
@@ -290,7 +314,7 @@ app.put('/api/cars/:id', [auth, isAdmin], async (req, res) => {
     .populate('status');
 
     if (!car) {
-      return res.status(404).json({ error: 'Car not found' });
+      return res.status(404).json({ error: 'Автомобіль не знайдено' });
     }
 
     res.json(car);
@@ -306,21 +330,21 @@ app.delete('/api/cars/:id', [auth, isAdmin], async (req, res) => {
     const car = await Car.findByIdAndDelete(req.params.id);
     
     if (!car) {
-      return res.status(404).json({ error: 'Car not found' });
+      return res.status(404).json({ error: 'Автомобіль не знайдено' });
     }
 
-    res.json({ message: 'Car deleted successfully' });
+    res.json({ message: 'Автомобіль успішно видалено' });
   } catch (error) {
-    console.error('Error deleting car:', error);
-    res.status(500).json({ error: 'Failed to delete car' });
+    console.error('Помилка видалення автомобіля:', error);
+    res.status(500).json({ error: 'Не вдалося видалити автомобіль' });
   }
 });
 
 // Get reviews for a car
-app.get('/api/cars/:id/reviews', auth, async (req, res) => {
+app.get('/api/cars/:id/reviews', async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid car ID format' });
+      return res.status(400).json({ error: 'Неправильний формат ID автомобіля' });
     }
 
     const reviews = await Review.find({ car: req.params.id })
@@ -336,21 +360,21 @@ app.get('/api/cars/:id/reviews', auth, async (req, res) => {
   }
 });
 
-// Create review for a car
+// Create review for a car (requires authentication)
 app.post('/api/cars/:id/reviews', auth, async (req, res) => {
   try {
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(400).json({ error: 'Invalid car ID format' });
+      return res.status(400).json({ error: 'Неправильний формат ID автомобіля' });
     }
 
     const { comment } = req.body;
     if (!comment) {
-      return res.status(400).json({ error: 'Comment is required' });
+      return res.status(400).json({ error: 'Коментар є обов\'язковим' });
     }
 
     const car = await Car.findById(req.params.id);
     if (!car) {
-      return res.status(404).json({ error: 'Car not found' });
+      return res.status(404).json({ error: 'Автомобіль не знайдено' });
     }
 
     const review = await Review.create({
@@ -384,11 +408,11 @@ app.post('/api/cars/:id/check-availability', auth, async (req, res) => {
     const end = new Date(endDate);
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      return res.status(400).json({ error: 'Invalid date format' });
+      return res.status(400).json({ error: 'Неправильний формат дати' });
     }
 
     if (start >= end) {
-      return res.status(400).json({ error: 'End date must be after start date' });
+      return res.status(400).json({ error: 'Дата закінчення має бути пізніше дати початку' });
     }
 
     // Find overlapping rentals
@@ -427,19 +451,19 @@ app.post('/api/rentals', auth, async (req, res) => {
     const { car_id, start_date, end_date, total_price } = req.body;
 
     if (!car_id || !start_date || !end_date || total_price === undefined) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      return res.status(400).json({ error: 'Відсутні обов\'язкові поля' });
     }
 
     const start = new Date(start_date);
     const end = new Date(end_date);
 
     if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) {
-      return res.status(400).json({ error: 'Invalid date range' });
+      return res.status(400).json({ error: 'Неправильний діапазон дат' });
     }
 
     const car = await Car.findById(car_id);
     if (!car) {
-      return res.status(404).json({ error: 'Car not found' });
+      return res.status(404).json({ error: 'Автомобіль не знайдено' });
     }
 
     const overlappingRentals = await Rental.find({
@@ -453,7 +477,7 @@ app.post('/api/rentals', auth, async (req, res) => {
     });
 
     if (overlappingRentals.length > 0) {
-      return res.status(400).json({ error: 'Car is not available for these dates' });
+      return res.status(400).json({ error: 'Автомобіль недоступний на ці дати' });
     }
 
     const rental = await Rental.create({
@@ -506,7 +530,7 @@ app.put('/api/rentals/:id', auth, async (req, res) => {
     .populate('client_id');
 
     if (!rental) {
-      return res.status(404).json({ error: 'Rental not found' });
+      return res.status(404).json({ error: 'Оренду не знайдено' });
     }
 
     res.json(rental);
@@ -522,13 +546,13 @@ app.delete('/api/rentals/:id', auth, async (req, res) => {
     const rental = await Rental.findByIdAndDelete(req.params.id);
     
     if (!rental) {
-      return res.status(404).json({ error: 'Rental not found' });
+      return res.status(404).json({ error: 'Оренду не знайдено' });
     }
 
-    res.json({ message: 'Rental deleted successfully' });
+    res.json({ message: 'Оренду успішно видалено' });
   } catch (error) {
-    console.error('Error deleting rental:', error);
-    res.status(500).json({ error: 'Failed to delete rental' });
+    console.error('Помилка видалення оренди:', error);
+    res.status(500).json({ error: 'Не вдалося видалити оренду' });
   }
 });
 
@@ -547,7 +571,7 @@ app.get('/api/users/:id', [auth, isAdmin], async (req, res) => {
   try {
     const user = await User.findById(req.params.id).select('-password');
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'Користувача не знайдено' });
     }
     res.json(user);
   } catch (error) {
@@ -566,7 +590,7 @@ app.put('/api/users/:id', [auth, isAdmin], async (req, res) => {
     ).select('-password');
 
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'Користувача не знайдено' });
     }
 
     res.json(user);
@@ -581,10 +605,10 @@ app.delete('/api/users/:id', [auth, isAdmin], async (req, res) => {
     const user = await User.findByIdAndDelete(req.params.id);
     
     if (!user) {
-      return res.status(404).json({ error: 'User not found' });
+      return res.status(404).json({ error: 'Користувача не знайдено' });
     }
 
-    res.json({ message: 'User deleted successfully' });
+    res.json({ message: 'Користувача успішно видалено' });
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ error: 'Failed to delete user' });
@@ -612,7 +636,7 @@ app.post('/api/signup', [
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ error: 'Email already exists' });
+      return res.status(400).json({ error: 'Користувач з такою електронною поштою вже існує' });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -668,12 +692,12 @@ app.post('/api/login', [
 
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(400).json({ error: 'Неправильні облікові дані' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(400).json({ error: 'Invalid credentials' });
+      return res.status(400).json({ error: 'Неправильні облікові дані' });
     }
 
     const token = jwt.sign(
@@ -709,7 +733,7 @@ app.get('/api/verify-token', auth, async (req, res) => {
   try {
     const user = await User.findById(req.user.id).select('-password');
     if (!user) {
-      return res.status(401).json({ error: 'User not found' });
+      return res.status(401).json({ error: 'Користувача не знайдено' });
     }
     res.json({ 
       user: {
@@ -732,23 +756,23 @@ app.delete('/api/reviews/:reviewId', auth, async (req, res) => {
   try {
     const review = await Review.findById(req.params.reviewId);
     if (!review) {
-      return res.status(404).json({ error: 'Review not found' });
+      return res.status(404).json({ error: 'Відгук не знайдено' });
     }
 
     // Only author or admin can delete
     if (review.client.toString() !== req.user.id && req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Access denied' });
+      return res.status(403).json({ error: 'Доступ заборонено' });
     }
 
     await Review.findByIdAndDelete(req.params.reviewId);
-    res.json({ message: 'Review deleted successfully' });
+    res.json({ message: 'Відгук успішно видалено' });
   } catch (error) {
-    res.status(500).json({ error: 'Failed to delete review' });
+    res.status(500).json({ error: 'Не вдалося видалити відгук' });
   }
 });
 
 app.get('/', (req, res) => {
-    res.send('BurundukGarage API is running!');
+    res.send('API BurundukGarage працює!');
 });
 
 app.listen(port, () => {

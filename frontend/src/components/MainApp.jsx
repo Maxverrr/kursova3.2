@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 import CarList from './CarList';
@@ -11,32 +11,20 @@ import RentalsPage from './RentalsPage';
 import UserRentalsPage from './UserRentalsPage';
 import ApiService from '../services/api';
 
-const ProtectedRoute = ({ children, adminOnly = false }) => {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return <div className="text-center py-4">Loading...</div>;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  if (adminOnly && user.role !== 'admin') {
-    return <Navigate to="/" />;
-  }
-
-  return children;
-};
-
 function CarManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useAuth();
 
   const handleAddCar = async (carData) => {
-    await ApiService.createCar(carData);
-    setIsModalOpen(false);
-    window.location.reload(); 
+    try {
+      await ApiService.createCar(carData);
+      setIsModalOpen(false);
+      // Dispatch custom event to update car list
+      window.dispatchEvent(new CustomEvent('carListUpdated'));
+    } catch (error) {
+      console.error('Error adding car:', error);
+      throw error;
+    }
   };
 
   return (
@@ -80,64 +68,9 @@ function CarManagement() {
 
 function MainApp() {
   return (
-      <Routes>
-        <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <CarManagement />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/mainpage"
-          element={
-            <ProtectedRoute>
-              <MainPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/support"
-          element={
-            <ProtectedRoute>
-              <SupportPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/users"
-          element={
-            <ProtectedRoute adminOnly={true}>
-              <UsersPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/rentals"
-          element={
-            <ProtectedRoute adminOnly={true}>
-              <RentalsPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/my-rentals"
-          element={
-            <ProtectedRoute>
-              <UserRentalsPage />
-            </ProtectedRoute>
-          }
-        />
-      <Route
-        path="/cars/:id"
-        element={
-          <ProtectedRoute>
-            <CarDetails />
-          </ProtectedRoute>
-        }
-      />
-      </Routes>
+    <Routes>
+      <Route path="/" element={<CarManagement />} />
+    </Routes>
   );
 }
 

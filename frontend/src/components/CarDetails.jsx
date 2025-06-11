@@ -86,7 +86,7 @@ const CarDetails = () => {
         if (window.confirm('Ви впевнені, що хочете видалити цей автомобіль?')) {
             try {
                 await ApiService.deleteCar(id);
-                navigate('/');
+                navigate('/MainApp?page=1');
             } catch (err) {
                 setError(err.message);
             }
@@ -369,9 +369,9 @@ const CarDetails = () => {
                             )}
 
                             <div className="space-y-6">
-                                {reviews.length === 0 ? (
-                                    <p className="text-gray-400">Поки що немає відгуків про цей автомобіль</p>
-                                ) : (
+                            {reviews.length === 0 ? (
+                                <p className="text-gray-400">Поки що немає відгуків про цей автомобіль</p>
+                            ) : (
                                     reviews.map(review => (
                                         <div key={review._id} className="bg-gray-700/50 rounded-lg p-4">
                                             <div className="flex justify-between items-start mb-2">
@@ -394,7 +394,7 @@ const CarDetails = () => {
                                         </div>
                                     ))
                                 )}
-                            </div>
+                                </div>
                         </div>
                     </div>
                 </div>
