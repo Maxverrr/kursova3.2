@@ -165,7 +165,7 @@ const CarList = () => {
                 {/* Top rentals of the month section */}
             <div className="mb-8">
                 <h2 className="text-2xl text-center font-bold text-white mb-4">Топ оренди місяця</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-3 gap-2 md:gap-6">
                      <div className="relative group rounded-lg overflow-hidden bg-gray-700">
                         <Link to="/cars/683ed7492979b884fda5ed4d">
                             <img src="/img/topaudi.JPEG" alt="Audi RS6" className="w-full h-auto" />
@@ -276,7 +276,7 @@ const CarList = () => {
 
             
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-4 md:gap-6">
                 {cars.map(car => (
                     <div key={car._id} className="relative w-full aspect-[16/9.924] rounded-lg shadow-lg overflow-hidden group">
                         {/* Background Image */}
