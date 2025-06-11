@@ -170,7 +170,7 @@ const CarList = () => {
                         <Link to="/cars/683ed7492979b884fda5ed4d">
                             <img src="/img/topaudi.JPEG" alt="Audi RS6" className="w-full h-auto" />
                         </Link>
-                        <div className="absolute inset-x-0 bottom-0 h-0 group-hover:h-14 bg-gradient-to-t from-black/90 to-black/100 transition-all duration-300 flex items-center justify-center">
+                        <div className="absolute inset-x-0 bottom-0 h-0 group-hover:h-[22%] bg-gradient-to-t from-black/90 to-black/100 transition-all duration-300 flex items-center justify-center">
                             <Link
                             to="/cars/683ed7492979b884fda5ed4d"
                             className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150 px-6 py-2 bg-orange-900 rounded-full text-white font-medium"
@@ -185,7 +185,7 @@ const CarList = () => {
                         <Link to="/cars/683ed7492979b884fda5ed51">
                             <img src="/img/topbmw.JPEG" alt="BMW M5"/>
                         </Link>
-                        <div className="absolute inset-x-0 bottom-0 h-0 group-hover:h-14 bg-gradient-to-t from-black/90 to-black/100 transition-all duration-300 flex items-center justify-center">
+                        <div className="absolute inset-x-0 bottom-0 h-0 group-hover:h-[22%] bg-gradient-to-t from-black/90 to-black/100 transition-all duration-300 flex items-center justify-center">
                             <Link
                             to="/cars/683ed7492979b884fda5ed51"
                             className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150 px-6 py-2 bg-orange-900 rounded-full text-white font-medium"
@@ -199,7 +199,7 @@ const CarList = () => {
                         <Link to="/cars/683ee2745bdbcc2301360100">
                             <img src="/img/topmerc.JPEG" alt="Mercedes-Benz C63"/>
                         </Link>
-                        <div className="absolute inset-x-0 bottom-0 h-0 group-hover:h-14 bg-gradient-to-t from-black/90 to-black/100 transition-all duration-300 flex items-center justify-center">
+                        <div className="absolute inset-x-0 bottom-0 h-0 group-hover:h-[22%] bg-gradient-to-t from-black/90 to-black/100 transition-all duration-300 flex items-center justify-center">
                             <Link
                             to="/cars/683ee2745bdbcc2301360100"
                             className="opacity-0 group-hover:opacity-100 transition-opacity duration-300 delay-150 px-6 py-2 bg-orange-900 rounded-full text-white font-medium"
@@ -276,7 +276,7 @@ const CarList = () => {
 
             
 
-            <div className="grid grid-cols-2 gap-4 md:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                 {cars.map(car => (
                     <div key={car._id} className="relative w-full aspect-[16/9.924] rounded-lg shadow-lg overflow-hidden group">
                         {/* Background Image */}
