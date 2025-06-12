@@ -40,7 +40,7 @@ const Header = () => {
               <span className="hidden sm:inline text-sm sm:text-lg md:text-xl lg:text-2xl text-gray-300">{user.email}</span>
               <button
                 onClick={handleLogout}
-                className="text-sm sm:text-lg md:text-xl lg:text-2xl px-2 sm:px-4 py-1 sm:py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                className="text-sm sm:text-lg md:text-xl lg:text-2xl px-2 sm:px-4 py-1 sm:py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
               >
                 Вийти
               </button>
@@ -48,7 +48,7 @@ const Header = () => {
           ) : (
             <Link
               to="/login"
-              className="text-sm sm:text-lg md:text-xl lg:text-2xl px-2 sm:px-4 py-1 sm:py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+              className="text-sm sm:text-lg md:text-xl lg:text-2xl px-2 sm:px-4 py-1 sm:py-2 bg-green-700 text-white rounded hover:bg-green-800 transition-colors"
             >
               Увійти
             </Link>
