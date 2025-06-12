@@ -206,7 +206,7 @@ const CarDetails = () => {
 
             // Close modal and show success message
             setIsRentModalOpen(false);
-            alert('Оренду успішно оформлено!');
+            // alert('Оренду успішно оформлено!');
             navigate('/my-rentals');
         } catch (err) {
             console.error('Rental submission error:', err);

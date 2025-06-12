@@ -305,7 +305,15 @@ const CarList = () => {
                         {/* Content */}
                         <div className="relative h-full p-[3%] flex flex-col justify-between">
                             <div className="flex justify-between items-start">
-                                <h3 className="text-[min(2.2vw,1.9rem)] font-bold text-white">{car.name}</h3>
+                                <div className="flex items-center gap-x-3">
+                                    <img 
+                                        src={`/img/brands/${car.name.split(' ')[0].toLowerCase()}.png`} 
+                                        alt={`${car.name.split(' ')[0]} logo`}
+                                        className="h-[min(2.5vw,1.9rem)] w-auto"
+                                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                                    />
+                                    <h3 className="text-[min(2.2vw,1.9rem)] font-bold text-white">{car.name}</h3>
+                                </div>
                                 <span className={`px-[2.5%] py-[0.7%] rounded-full text-[min(1vw,0.9rem)] ${
                                     car.status?.status ? 'bg-green-800/80 text-green-200' : 'bg-red-800/80 text-red-200'
                                 }`}>
