@@ -21,7 +21,7 @@ const CarList = () => {
     const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
     const [activeFilters, setActiveFilters] = useState({});
 
-    // Add event listener for car list updates
+   
     useEffect(() => {
         const handleCarListUpdate = () => {
             console.log('Car list update event received');
@@ -162,7 +162,7 @@ const CarList = () => {
         
         <div className="space-y-6 text-white p-4">
             <div className="flex flex-col gap-4">
-                {/* Top rentals of the month section */}
+                {/* Топ оренд місяця */}
             <div className="mb-8">
                 <h2 className="text-2xl text-center font-bold text-white mb-4">Топ оренди місяця</h2>
                 <div className="grid grid-cols-3 gap-2 md:gap-6">
@@ -211,7 +211,7 @@ const CarList = () => {
                 </div>
             </div>
             
-                {/* Search and Sort Controls */}
+                {/* Пошук та сортування */}
                 <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
                     <input
                         type="text"
@@ -246,7 +246,7 @@ const CarList = () => {
                     </div>
                 </div>
 
-                {/* Active Filters Display */}
+                {/* Активні фільтрів */}
                 {Object.keys(activeFilters).length > 0 && (
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 text-sm">
                         <span className="font-medium whitespace-nowrap">Активні фільтри:</span>
@@ -279,7 +279,7 @@ const CarList = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                 {cars.map(car => (
                     <div key={car._id} className="relative w-full aspect-[16/9.924] rounded-lg shadow-lg overflow-hidden group">
-                        {/* Background Image */}
+                        {/* Фонове зображення */}
                         <div 
                             className="absolute inset-0 bg-cover bg-center"
                             style={{ 
@@ -287,7 +287,7 @@ const CarList = () => {
                             }}
                         />
 
-                        {/* Class Indicator */}
+                        {/* Індикатор класу */}
                         <div className="absolute inset-0">
                             <img 
                                 src={`/img/class_${car.class?.class_name.toLowerCase()}.png`}
@@ -296,13 +296,13 @@ const CarList = () => {
                             />
                         </div>
 
-                        {/* Dark Overlay - Right */}
+                        {/* Тінь справа */}
                         <div className="absolute top-0 right-0 h-full bg-black/50 w-[23.2%]" />
                         
-                        {/* Dark Overlay - Top */}
+                        {/* Тінь зверху */}
                         <div className="absolute top-0 left-0 right-0 h-[17.5%] bg-black/50" />
 
-                        {/* Content */}
+                        {/* Вміст */}
                         <div className="relative h-full p-[3%] flex flex-col justify-between">
                             <div className="flex justify-between items-start">
                                 <div className="flex items-center gap-x-3">
@@ -321,7 +321,7 @@ const CarList = () => {
                                 </span>
                             </div>
 
-                            {/* Car Specs */}
+                            {/* Характеристики авто */}
                             <div className="flex justify-end">
                                 <div className="space-y-[0.01%]">
                                     <div className="text-right">
@@ -344,7 +344,7 @@ const CarList = () => {
                             </div>
                         </div>
 
-                        {/* Hover Animation Stripe with Details Link */}
+                        {/* Анімація*/}
                         <div className="absolute inset-x-0 bottom-0 h-0 group-hover:h-[22%] bg-gradient-to-t from-black/90 to-black/70 transition-all duration-300 ease-out flex items-center justify-center">
                             <Link 
                                 to={`/cars/${car._id}?returnPage=${page}`}
@@ -375,7 +375,7 @@ const CarList = () => {
                 </button>
             </div>
 
-            {/* Edit Modal */}
+            {/* Модальне вікно редагування */}
             {isEditModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
                     <div className="fixed inset-0 bg-black opacity-50"></div>
@@ -402,7 +402,7 @@ const CarList = () => {
                 </div>
             )}
 
-            {/* Filter Modal */}
+            {/* Модальне вікно фільтра */}
             {isFilterModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
                     <div className="fixed inset-0 bg-black opacity-50"></div>

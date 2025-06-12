@@ -68,7 +68,7 @@ const MainPage = () => {
 
   return (
     <div className="bg-gradient-to-br from-gray-900 to-blue-900">
-      {/* Hero Section */}
+     
       <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-8 sm:pb-12">
         <div className="text-center mb-12 sm:mb-16">
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 px-2">
@@ -85,14 +85,14 @@ const MainPage = () => {
           </Link>
         </div>
 
-        {/* Advantages Grid */}
+       
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
           {advantages.map((advantage, index) => (
             <AdvantageCard key={index} {...advantage} />
           ))}
         </div>
 
-        {/* Contact Section */}
+       
         <div className="bg-gray-800 rounded-lg p-6 sm:p-8 shadow-xl">
           <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 text-center">
             Зв'яжіться з нами

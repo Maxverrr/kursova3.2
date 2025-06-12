@@ -34,7 +34,7 @@ const CarDetails = () => {
                 setLoading(true);
                 setError(null);
 
-                // Fetch basic car data and reviews (these should be public)
+                // Отримуємо основні дані про автомобіль та відгуки (мають бути публічними)
                 try {
                     const [carData, reviewsData] = await Promise.all([
                         ApiService.getCar(id),
@@ -48,7 +48,7 @@ const CarDetails = () => {
                     return;
                 }
 
-                // Only fetch rentals if user is authenticated
+                // Отримуємо дані про оренду, тільки якщо користувач автентифікований
                 if (user) {
                     try {
                         const rentalsResponse = await ApiService.getRentals();
@@ -61,8 +61,8 @@ const CarDetails = () => {
                         })));
                     } catch (err) {
                         console.error('Error fetching rentals:', err);
-                        // Don't set error state for rentals fetch failure
-                        // Just log it since it's not critical for viewing car details
+                        // Не встановлюємо стан помилки для невдалого запиту оренди
+                        // Просто логуємо, оскільки це не критично для перегляду деталей авто
                     }
                 }
             } finally {
@@ -125,7 +125,7 @@ const CarDetails = () => {
         }
     };
 
-    // Function to check if a date is disabled
+    // Функція для перевірки, чи дата заблокована
     const isDateDisabled = (date) => {
         if (!existingRentals || !date) return false;
         return existingRentals.some(rental => {
@@ -135,7 +135,7 @@ const CarDetails = () => {
         });
     };
 
-    // Custom day rendering
+    // Кастомний рендеринг дня
     const renderDayContents = (day, date) => {
         const isDisabled = isDateDisabled(date);
         return (
@@ -160,7 +160,7 @@ const CarDetails = () => {
         }
 
         try {
-            // Convert dates to ISO format with timezone
+            // Конвертуємо дати в формат ISO з часовою зоною
             const startDateTime = new Date(rentDates.startDate);
             const endDateTime = new Date(rentDates.endDate);
             
@@ -171,7 +171,7 @@ const CarDetails = () => {
                 originalEndDate: rentDates.endDate
             });
 
-            // Check availability
+            // Перевіряємо доступність
             const availability = await ApiService.checkCarAvailability(
                 id,
                 startDateTime.toISOString(),
@@ -181,7 +181,7 @@ const CarDetails = () => {
             console.log('Availability response:', availability);
 
             if (!availability.available) {
-                // Format overlapping dates message
+                // Форматуємо повідомлення про дати, що перетинаються
                 const overlappingDatesStr = availability.overlappingDates
                     .map(dates => `${formatDate(dates.start)} - ${formatDate(dates.end)}`)
                     .join(', ');
@@ -199,12 +199,12 @@ const CarDetails = () => {
 
             console.log('Creating rental with data:', rentalData);
 
-            // Create rental with proper date format
+            // Створюємо оренду з правильним форматом дати
             const response = await ApiService.createRental(rentalData);
             
             console.log('Rental creation response:', response);
 
-            // Close modal and show success message
+            // Закриваємо модальне вікно та показуємо повідомлення про успіх
             setIsRentModalOpen(false);
             // alert('Оренду успішно оформлено!');
             navigate('/my-rentals');
@@ -349,12 +349,12 @@ const CarDetails = () => {
                         </div>
                     </div>
 
-                    {/* Reviews Section */}
+                    {/* Секція відгуків */}
                     <div className="border-t border-gray-700">
                         <div className="p-6">
                             <h2 className="text-2xl font-bold text-white mb-6">Відгуки</h2>
                             
-                            {/* Add Review Form */}
+                            {/* Форма додавання відгуку */}
                             {user && (
                                 <form 
                                     onSubmit={async (e) => {
@@ -421,7 +421,7 @@ const CarDetails = () => {
                 </div>
             </div>
 
-            {/* Rent Modal */}
+            {/* Модальне вікно оренди */}
             {isRentModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-gray-800 rounded-lg w-full max-w-md">
@@ -520,7 +520,7 @@ const CarDetails = () => {
                 </div>
             )}
 
-            {/* Auth Modal */}
+            {/* Модальне вікно авторизації */}
             {isAuthModalOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
                     <div className="bg-gray-800 rounded-lg w-full max-w-md p-6">
@@ -557,7 +557,7 @@ const CarDetails = () => {
                 </div>
             )}
 
-            {/* Edit Modal */}
+            {/* Модальне вікно редагування */}
             {isEditModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
                     <div className="fixed inset-0 bg-black opacity-50"></div>

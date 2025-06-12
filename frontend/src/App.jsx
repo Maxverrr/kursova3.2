@@ -42,7 +42,7 @@ function AppContent() {
     <>
       {showHeader && <Header />}
       <Routes>
-        {/* Public routes */}
+        {/* Публічні маршрути */}
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/" element={<Navigate to="/MainApp" />} />
@@ -51,14 +51,14 @@ function AppContent() {
         <Route path="/mainpage" element={<MainPage />} />
         <Route path="/support" element={<SupportPage />} />
 
-        {/* Protected routes */}
+        {/* Захищені маршрути */}
         <Route path="/my-rentals" element={
           <PrivateRoute>
             <UserRentalsPage />
           </PrivateRoute>
         } />
 
-        {/* Admin-only routes */}
+        {/* Маршрути тільки для адміністратора */}
         <Route path="/users" element={
           <PrivateRoute adminOnly={true}>
             <UsersPage />
