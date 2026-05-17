@@ -1,132 +1,131 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
-import { FaPhone, FaTelegram, FaInstagram, FaClock, FaShieldAlt, FaMoneyBillWave, FaCar, FaCalendarAlt, FaMouse, FaTruck, FaCarSide, FaTag, FaRoad } from 'react-icons/fa';
+import { FaPhone, FaTelegram, FaInstagram } from 'react-icons/fa';
 
-const AdvantageCard = ({ icon, title, description }) => (
-  <div className="bg-gray-800 p-4 sm:p-6 rounded-lg shadow-lg transform hover:scale-105 transition-transform duration-300">
-    <div className="text-blue-500 text-3xl sm:text-4xl mb-3 sm:mb-4 flex justify-center">
-      {icon}
-    </div>
-    <h3 className="text-lg sm:text-xl font-bold text-white mb-2 text-center">{title}</h3>
-    <p className="text-gray-300 text-sm sm:text-base text-center">{description}</p>
-  </div>
-);
+/** Шлях до фото в hero-блоці (рядок ~5) */
+const HERO_CAR_IMAGE = '/img/mainpagebmw.png';
+
+const FEATURES = [
+  {
+    title: 'Технічні характеристики',
+    text: 'У нашому автопарку — сучасні моделі з розумними системами безпеки, комфортом і стабільною потужністю для будь-якої поїздки.',
+  },
+  {
+    title: 'Наші клієнти',
+    text: 'Працюємо з приватними клієнтами та бізнесом: прозорі умови, швидке оформлення і підтримка на кожному етапі оренди.',
+  },
+  {
+    title: 'Екологічність',
+    text: 'Розширюємо лінійку економічних і гібридних авто — менше витрат палива без компромісів із якістю сервісу.',
+  },
+];
 
 const MainPage = () => {
-  const advantages = [
-    {
-      icon: <FaClock />,
-      title: "Цілодобова підтримка",
-      description: "Ми завжди на зв'язку — 24/7 онлайн і телефоном."
-    },
-    {
-      icon: <FaShieldAlt />,
-      title: "Страхування включено",
-      description: "Усі авто застраховані — ніяких прихованих витрат."
-    },
-    {
-      icon: <FaMoneyBillWave />,
-      title: "Без депозиту",
-      description: "Не блокуємо гроші на карті — чесні умови оренди."
-    },
-    {
-      icon: <FaCar />,
-      title: "Авто в ідеальному стані",
-      description: "Регулярне техобслуговування, чистота та повний бак при видачі."
-    },
-    {
-      icon: <FaCalendarAlt />,
-      title: "Гнучка оренда (від 1 дня)",
-      description: "Хоч на 1 день, хоч на місяць — підлаштовуємось під тебе."
-    },
-    {
-      icon: <FaMouse />,
-      title: "Швидке бронювання онлайн",
-      description: "Займає менше 2 хвилин. Без дзвінків і зайвих паперів."
-    },
-    {
-      icon: <FaTruck />,
-      title: "Доставка авто до клієнта",
-      description: "Можемо привезти автомобіль прямо до тебе (у межах міста)."
-    },
-    {
-      icon: <FaCarSide />,
-      title: "Великий вибір авто",
-      description: "Від бюджетних моделей до преміум-класу та позашляховиків."
-    },
-    {
-      icon: <FaTag />,
-      title: "Прозоре ціноутворення",
-      description: "Всі ціни видно одразу — ніяких «дрібних шрифтів»."
-    },
-    {
-      icon: <FaRoad />,
-      title: "Без обмеження пробігу",
-      description: "Їдь скільки хочеш — без доплат за кілометраж."
-    }
-  ];
-
   return (
-    <div className="bg-gradient-to-br from-gray-900 to-blue-900">
-     
-      <div className="container mx-auto px-4 pt-20 sm:pt-24 pb-8 sm:pb-12">
-        <div className="text-center mb-12 sm:mb-16">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-4 sm:mb-6 px-2">
-            Оренда автомобілів в Україні
-          </h1>
-          <p className="text-lg sm:text-xl text-gray-300 mb-6 sm:mb-8">
-            Зручно, швидко та надійно
-          </p>
-          <Link
-            to="/MainApp"
-            className="inline-block px-6 sm:px-8 py-3 sm:py-4 bg-blue-600 text-white text-lg sm:text-xl font-bold rounded-full hover:bg-blue-700 transform hover:scale-105 transition-all duration-300 shadow-lg"
+    <div className="min-h-screen bg-black text-white">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 pb-16 pt-28 lg:pt-32">
+        {/* Hero */}
+        <section
+          className="mb-16 grid grid-cols-1 items-center gap-10 lg:mb-24 lg:grid-cols-2 lg:gap-12"
+          aria-labelledby="landing-heading"
+        >
+          <div className="order-2 lg:order-1">
+            <h1
+              id="landing-heading"
+              className="mb-7 text-[clamp(2.75rem,8vw,5.5rem)] font-extrabold uppercase leading-[0.95] tracking-tight"
+            >
+              <span className="block">Авто.</span>
+              <span className="block">Для.</span>
+              <span className="block">будь-якої.</span>
+              <span className="block">подорожі.</span>
+            </h1>
+            <p className="mb-8 max-w-md text-base leading-relaxed text-white/75 sm:text-[1.0625rem]">
+              У нас є автомобілі на кожну міську поїздку і далеку дорогу. Перегляньте
+              автопарк і оберіть модель під свій стиль життя.
+            </p>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                to="/MainApp"
+                className="inline-flex items-center justify-center border-2 border-white bg-white px-7 py-3.5 text-[0.9375rem] font-semibold text-black transition hover:-translate-y-0.5 hover:bg-neutral-200"
+              >
+                Наш автопарк
+              </Link>
+              <Link
+                to="/support"
+                className="inline-flex items-center justify-center border-2 border-white bg-transparent px-7 py-3.5 text-[0.9375rem] font-semibold text-white transition hover:-translate-y-0.5 hover:bg-white/10"
+              >
+                Зв&apos;язатися
+              </Link>
+            </div>
+          </div>
+
+          <div
+            className="relative order-1 mx-auto aspect-square w-full max-w-[520px] lg:order-2 lg:ml-auto lg:max-w-none"
+            aria-hidden="true"
           >
-            Орендувати автомобіль зараз
-          </Link>
-        </div>
+            <div className="absolute left-[-4%] top-[8%] z-0 h-[72%] w-[28%] bg-[#3d3d3d]" />
+            <div className="absolute right-[-6%] top-[18%] z-0 h-[58%] w-[22%] bg-[#e85d04]" />
+            <div className="absolute bottom-[-2%] right-[4%] z-0 h-[22%] w-[42%] bg-[#e8e4df]" />
+            <div className="relative z-10 mx-auto mt-[11%] h-[78%] w-[78%] overflow-hidden bg-neutral-900">
+              <img
+                src={HERO_CAR_IMAGE}
+                alt="Преміальний автомобіль Burunduk Garage"
+                className="h-full w-full object-cover object-[center_40%]"
+                onError={(e) => {
+                  e.currentTarget.src = HERO_CAR_IMAGE_FALLBACK;
+                }}
+              />
+            </div>
+          </div>
+        </section>
 
-       
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8 mb-12 sm:mb-16">
-          {advantages.map((advantage, index) => (
-            <AdvantageCard key={index} {...advantage} />
+        {/* Features */}
+        <section
+          className="grid grid-cols-1 gap-10 border-t border-white/10 pt-8 md:grid-cols-3 md:gap-8"
+          aria-label="Переваги сервісу"
+        >
+          {FEATURES.map((item) => (
+            <article key={item.title}>
+              <h2 className="mb-3 text-lg font-bold uppercase tracking-wide">{item.title}</h2>
+              <p className="text-[0.9375rem] leading-relaxed text-white/70">{item.text}</p>
+            </article>
           ))}
-        </div>
+        </section>
 
-       
-        <div className="bg-gray-800 rounded-lg p-6 sm:p-8 shadow-xl">
-          <h2 className="text-2xl sm:text-3xl font-bold text-white mb-6 text-center">
-            Зв'яжіться з нами
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+        {/* Contact */}
+        <footer className="mt-16 border-t border-white/10 pt-8">
+          <p className="mb-5 text-center text-sm font-bold uppercase tracking-widest text-white/50">
+            Зв&apos;яжіться з нами
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-5 sm:gap-8">
             <a
               href="tel:+380962523909"
-              className="flex items-center justify-center space-x-3 text-white hover:text-blue-400 transition-colors p-2 sm:p-0"
+              className="inline-flex items-center gap-2 text-[0.9375rem] text-white/85 transition hover:text-[#e85d04]"
             >
-              <FaPhone className="text-xl sm:text-2xl" />
-              <span className="text-base sm:text-xl">+38 (096) 252-39-09</span>
+              <FaPhone className="text-lg" />
+              <span>+38 (096) 252-39-09</span>
             </a>
             <a
               href="https://t.me/Burunduk_garage"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center space-x-3 text-white hover:text-blue-400 transition-colors p-2 sm:p-0"
+              className="inline-flex items-center gap-2 text-[0.9375rem] text-white/85 transition hover:text-[#e85d04]"
             >
-              <FaTelegram className="text-xl sm:text-2xl" />
-              <span className="text-base sm:text-xl">@Burunduk_garage</span>
+              <FaTelegram className="text-lg" />
+              <span>@Burunduk_garage</span>
             </a>
             <a
               href="https://instagram.com/Burunduk_garage"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center space-x-3 text-white hover:text-blue-400 transition-colors p-2 sm:p-0"
+              className="inline-flex items-center gap-2 text-[0.9375rem] text-white/85 transition hover:text-[#e85d04]"
             >
-              <FaInstagram className="text-xl sm:text-2xl" />
-              <span className="text-base sm:text-xl">@Burunduk_garage</span>
+              <FaInstagram className="text-lg" />
+              <span>@Burunduk_garage</span>
             </a>
           </div>
-        </div>
-      </div>
-    </div>
+        </footer>
+            </div>
+            </div>
   );
 };
 

@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import './Login.css';
+import AuthPageLayout from './AuthPageLayout';
+import { pageInputClass } from './AppPageLayout';
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -11,23 +12,19 @@ const Signup = () => {
     first_name: '',
     last_name: '',
     middle_name: '',
-    role: 'user'
+    role: 'user',
   });
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const { signup } = useAuth();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
     try {
       await signup(formData);
       navigate('/login');
@@ -36,105 +33,66 @@ const Signup = () => {
     }
   };
 
-  return (
-    <div className="auth-container">
-      <div className="auth-box">
-        <h1>Створити обліковий запис</h1>
-        <p className="subtitle">Зареєструйтесь, щоб почати користуватися системою оренди автомобілів</p>
-
-        {error && <div className="error-message">{error}</div>}
-
-        <form onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label htmlFor="email">Електронна пошта</label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              placeholder="Введіть вашу електронну пошту"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="password">Пароль</label>
-            <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              placeholder="Введіть ваш пароль"
-              minLength="6"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="first_name">Ім'я</label>
-            <input
-              type="text"
-              id="first_name"
-              name="first_name"
-              value={formData.first_name}
-              onChange={handleChange}
-              placeholder="Введіть ваше ім'я"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="last_name">Прізвище</label>
-            <input
-              type="text"
-              id="last_name"
-              name="last_name"
-              value={formData.last_name}
-              onChange={handleChange}
-              placeholder="Введіть ваше прізвище"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="middle_name">По батькові</label>
-            <input
-              type="text"
-              id="middle_name"
-              name="middle_name"
-              value={formData.middle_name}
-              onChange={handleChange}
-              placeholder="Введіть ваше по батькові"
-              required
-            />
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="phone_number">Номер телефону</label>
-            <input
-              type="tel"
-              id="phone_number"
-              name="phone_number"
-              value={formData.phone_number}
-              onChange={handleChange}
-              placeholder="Введіть ваш номер телефону"
-              required
-            />
-          </div>
-
-          <button type="submit" className="submit-button">
-            Створити обліковий запис
-          </button>
-        </form>
-
-        <p className="auth-footer">
-          Вже маєте обліковий запис? <Link to="/login">Увійти</Link>
-        </p>
-      </div>
+  const field = (id, label, type = 'text', extra = {}) => (
+    <div>
+      <label htmlFor={id} className="mb-2 block text-sm font-medium text-white/80">
+        {label}
+      </label>
+      <input
+        type={type}
+        id={id}
+        name={id}
+        value={formData[id]}
+        onChange={handleChange}
+        className={pageInputClass}
+        required
+        {...extra}
+      />
     </div>
+  );
+
+  return (
+    <AuthPageLayout wide>
+      <h1 className="text-center text-2xl font-bold sm:text-3xl">Створити обліковий запис</h1>
+      <p className="mt-2 text-center text-sm text-white/60">
+        Зареєструйтесь, щоб почати користуватися системою оренди
+      </p>
+
+      {error && (
+        <div className="mt-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-center text-sm text-red-300">
+          {error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+        {field('email', 'Електронна пошта', 'email', { placeholder: 'email@example.com' })}
+        {field('password', 'Пароль', 'password', {
+          placeholder: 'Мінімум 6 символів',
+          minLength: 6,
+        })}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {field('first_name', "Ім'я", 'text', { placeholder: "Ваше ім'я" })}
+          {field('last_name', 'Прізвище', 'text', { placeholder: 'Ваше прізвище' })}
+        </div>
+        {field('middle_name', 'По батькові', 'text', { placeholder: 'По батькові' })}
+        {field('phone_number', 'Номер телефону', 'tel', { placeholder: '+380...' })}
+
+        <button
+          type="submit"
+          className="w-full rounded-lg bg-blue-600 py-3 font-semibold text-white transition hover:bg-blue-500"
+        >
+          Створити обліковий запис
+        </button>
+      </form>
+
+      <p className="mt-6 text-center text-sm text-white/60">
+        Вже маєте обліковий запис?{' '}
+        <Link to="/login" className="font-medium text-blue-400 hover:text-blue-300">
+          Увійти
+        </Link>
+      </p>
+    </AuthPageLayout>
   );
 };
 
-export default Signup; 
+export default Signup;

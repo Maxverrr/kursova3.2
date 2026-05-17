@@ -10,6 +10,7 @@ import UsersPage from './UsersPage';
 import RentalsPage from './RentalsPage';
 import UserRentalsPage from './UserRentalsPage';
 import ApiService from '../services/api';
+import PremiumBackground from './PremiumBackground';
 
 function CarManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -28,8 +29,10 @@ function CarManagement() {
   };
 
   return (
-    <div>
-      <div className="container mx-auto px-4 pt-24 pb-8">
+    <>
+      <PremiumBackground variant="fleet" />
+      <div className="min-h-screen w-full relative">
+        <div className="container mx-auto px-4 pt-28 pb-8">
         <div className="flex justify-between items-center mb-8">
           {user?.role === 'admin' && (
             <button
@@ -44,8 +47,8 @@ function CarManagement() {
         <CarList />
 
         {isModalOpen && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-            <div className="bg-gray-800 rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+            <div className="glass-panel-strong max-w-4xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
                   <h2 className="text-2xl font-bold text-white">Додати новий автомобіль</h2>
@@ -61,8 +64,9 @@ function CarManagement() {
             </div>
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

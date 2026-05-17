@@ -6,6 +6,7 @@ import CarForm from './CarForm';
 import DatePicker from 'react-datepicker';
 import "react-datepicker/dist/react-datepicker.css";
 import { uk } from 'date-fns/locale';
+import PremiumBackground from './PremiumBackground';
 
 const CarDetails = () => {
     const { id } = useParams();
@@ -225,34 +226,45 @@ const CarDetails = () => {
     };
 
     if (loading) return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
-            <div className="text-white text-xl">Завантаження...</div>
-        </div>
+        <>
+            <PremiumBackground variant="details" />
+            <div className="min-h-screen flex items-center justify-center relative z-10">
+                <div className="text-white text-xl">Завантаження...</div>
+            </div>
+        </>
     );
 
     if (error) return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
-            <div className="text-red-500 text-xl">Помилка: {error}</div>
-        </div>
+        <>
+            <PremiumBackground variant="details" />
+            <div className="min-h-screen flex items-center justify-center relative z-10">
+                <div className="text-red-500 text-xl">Помилка: {error}</div>
+            </div>
+        </>
     );
 
     if (!car) return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 flex items-center justify-center">
-            <div className="text-white text-xl">Автомобіль не знайдено</div>
-        </div>
+        <>
+            <PremiumBackground variant="details" />
+            <div className="min-h-screen flex items-center justify-center relative z-10">
+                <div className="text-white text-xl">Автомобіль не знайдено</div>
+            </div>
+        </>
     );
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 to-blue-900">
-            <div className="container mx-auto px-4 pt-24 pb-8">
+        <>
+            <PremiumBackground variant="details" />
+            <div className="min-h-screen w-full relative">
+            <div className="container mx-auto px-4 pt-24 pb-4 relative z-10">
                 <Link 
                     to={`/MainApp?page=${returnPage}`}
-                    className="inline-block mb-8 px-6 py-2 bg-gray-700 text-white rounded-full hover:bg-gray-600 transition-colors"
+                    className="inline-block mb-8 px-6 py-2 glass-btn text-white rounded-full transition-colors"
                 >
                     ← Назад до списку
                 </Link>
 
-                <div className="bg-gray-800 rounded-lg shadow-xl overflow-hidden">
+                <div className="glass-panel-strong overflow-hidden">
                     <div className="relative h-96">
                         <img 
                             src={car.photo || '/placeholder-car.jpg'} 
@@ -265,7 +277,7 @@ const CarDetails = () => {
 
                     <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
                         <div className="space-y-6">
-                            <div>
+                            <div className="glass-section">
                                 <h2 className="text-2xl font-bold text-white mb-4">Характеристики</h2>
                                 <div className="space-y-3 text-gray-300">
                                     <p className="flex justify-between">
@@ -299,14 +311,14 @@ const CarDetails = () => {
                                 </div>
                             </div>
 
-                            <div>
+                            <div className="glass-section">
                                 <h2 className="text-2xl font-bold text-white mb-4">Ціна</h2>
                                 <p className="text-4xl font-bold text-blue-400">{car.price_per_day}₴ <span className="text-lg text-gray-400">/день</span></p>
                             </div>
                         </div>
 
                         <div className="space-y-6">
-                            <div>
+                            <div className="glass-section">
                                 <h2 className="text-2xl font-bold text-white mb-4">Статус</h2>
                                 <span className={`px-4 py-2 rounded-full text-sm ${
                                     car.status?.status ? 'bg-green-800/80 text-green-200' : 'bg-red-800/80 text-red-200'
@@ -324,7 +336,7 @@ const CarDetails = () => {
                                         }
                                         setIsRentModalOpen(true);
                                     }}
-                                    className="w-full px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-lg font-semibold"
+                                    className="w-full px-6 py-3 glass-cta text-white rounded-lg transition-colors text-lg font-semibold"
                                 >
                                     Орендувати
                                 </button>
@@ -350,7 +362,7 @@ const CarDetails = () => {
                     </div>
 
                     {/* Секція відгуків */}
-                    <div className="border-t border-gray-700">
+                    <div className="border-t glass-divider">
                         <div className="p-6">
                             <h2 className="text-2xl font-bold text-white mb-6">Відгуки</h2>
                             
@@ -370,18 +382,18 @@ const CarDetails = () => {
                                             alert(err.message || 'Помилка при додаванні відгуку');
                                         }
                                     }}
-                                    className="mb-8 bg-gray-700/30 p-4 rounded-lg"
+                                    className="mb-8 glass-panel p-4"
                                 >
                                     <div className="flex flex-col sm:flex-row gap-4">
                                         <textarea
                                             name="comment"
                                             placeholder="Напишіть свій відгук..."
-                                            className="flex-1 bg-gray-700 text-white rounded-lg p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="flex-1 glass-input text-white rounded-lg p-3 min-h-[100px] focus:outline-none focus:ring-2 focus:ring-blue-500"
                                             required
                                         />
                                         <button
                                             type="submit"
-                                            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors h-fit self-end"
+                                            className="px-6 py-3 glass-cta text-white rounded-lg transition-colors h-fit self-end"
                                         >
                                             Додати відгук
                                         </button>
@@ -394,7 +406,7 @@ const CarDetails = () => {
                                 <p className="text-gray-400">Поки що немає відгуків про цей автомобіль</p>
                             ) : (
                                     reviews.map(review => (
-                                        <div key={review._id} className="bg-gray-700/50 rounded-lg p-4">
+                                        <div key={review._id} className="glass-panel p-4">
                                             <div className="flex justify-between items-start mb-2">
                                                 <div>
                                                     <h3 className="font-semibold text-white">
@@ -423,8 +435,8 @@ const CarDetails = () => {
 
             {/* Модальне вікно оренди */}
             {isRentModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-lg w-full max-w-md">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="glass-panel-strong w-full max-w-md">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-xl font-bold text-white">Оформлення оренди</h2>
@@ -522,8 +534,8 @@ const CarDetails = () => {
 
             {/* Модальне вікно авторизації */}
             {isAuthModalOpen && (
-                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-                    <div className="bg-gray-800 rounded-lg w-full max-w-md p-6">
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+                    <div className="glass-panel-strong w-full max-w-md p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold text-white">Необхідна авторизація</h2>
                             <button
@@ -561,7 +573,7 @@ const CarDetails = () => {
             {isEditModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
                     <div className="fixed inset-0 bg-black opacity-50"></div>
-                    <div className="bg-gray-800 rounded-lg w-full max-w-4xl mx-4 z-50 max-h-[90vh] overflow-y-auto">
+                    <div className="glass-panel-strong w-full max-w-4xl mx-4 z-50 max-h-[90vh] overflow-y-auto">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-2xl font-bold text-white">Редагувати автомобіль</h2>
@@ -580,7 +592,8 @@ const CarDetails = () => {
                     </div>
                 </div>
             )}
-        </div>
+            </div>
+        </>
     );
 };
 

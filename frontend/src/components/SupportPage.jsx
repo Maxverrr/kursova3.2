@@ -1,47 +1,74 @@
-const SupportPage = () => {
-  const handlePhoneClick = () => {
-    window.location.href = 'tel:+380950390916';
-  };
+import { FaTelegram, FaPhone } from 'react-icons/fa';
+import AppPageLayout, { pagePanelClass } from './AppPageLayout';
 
-  const handleTelegramClick = () => {
-    window.location.href = 'https://t.me/bgarage_support_bot';
-  };
+const CONTACTS = [
+  {
+    id: 'telegram',
+    title: 'Telegram-бот',
+    description: 'Напишіть нам у боті — відповімо на питання щодо оренди та бронювання.',
+    href: 'https://t.me/bgarage_support_bot',
+    external: true,
+    icon: FaTelegram,
+    accent: 'from-sky-500/20 to-blue-600/10 border-sky-500/30',
+    iconColor: 'text-sky-400',
+  },
+  {
+    id: 'phone',
+    title: 'Телефон',
+    description: 'Зателефонуйте для швидкої консультації з технічних питань.',
+    href: 'tel:+380950390916',
+    external: false,
+    icon: FaPhone,
+    accent: 'from-emerald-500/20 to-green-600/10 border-emerald-500/30',
+    iconColor: 'text-emerald-400',
+    label: '+38 (095) 039-09-16',
+  },
+];
 
-  return (
-    <div className="fixed inset-0 bg-[#FFE4D6] overflow-hidden">
-      <div className="h-full flex flex-col items-center justify-center gap-8 p-4">
-        <div className="flex flex-col items-center justify-center gap-8 w-full max-w-screen-lg mx-auto">
-            {/*Телеграм*/}
-            <button 
-              onClick={handleTelegramClick}
-              className="transform hover:scale-105 transition-transform duration-200 w-full"
+const SupportPage = () => (
+  <AppPageLayout
+    title="Технічна підтримка"
+    subtitle="Зв’яжіться з нами зручним способом — ми на зв’язку."
+    variant="details"
+  >
+    <div className="mx-auto grid max-w-3xl grid-cols-1 gap-6 md:grid-cols-2">
+      {CONTACTS.map((contact) => {
+        const Icon = contact.icon;
+        const content = (
+          <>
+            <div
+              className={`mb-4 inline-flex rounded-xl border bg-gradient-to-br p-3 ${contact.accent}`}
             >
-              <img 
-                src="/img/supportt.png" 
-                alt="Telegram Support" 
-                className="w-full max-w-md md:max-w-xl lg:max-w-2xl h-auto mx-auto"
-              />
-            </button>
+              <Icon className={`text-2xl ${contact.iconColor}`} />
+            </div>
+            <h2 className="mb-2 text-lg font-bold">{contact.title}</h2>
+            <p className="mb-4 text-sm leading-relaxed text-white/65">{contact.description}</p>
+            <span className="text-sm font-semibold text-blue-400">
+              {contact.label || 'Відкрити Telegram →'}
+            </span>
+          </>
+        );
 
-    
-            {/* Телефон */}
-            <button 
-            onClick={handlePhoneClick}
-            className="transform hover:scale-105 transition-transform duration-200 w-full"
+        const className = `${pagePanelClass} block p-6 transition hover:border-white/25 hover:bg-gray-900/90`;
+
+        return contact.external ? (
+          <a
+            key={contact.id}
+            href={contact.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={className}
           >
-            <img 
-              src="/img/supportp.PNG" 
-              alt="Phone Support" 
-              className="w-full max-w-md md:max-w-xl lg:max-w-2xl h-auto mx-auto"
-            />
-          </button>
-        </div>
- 
-       
-      </div>
+            {content}
+          </a>
+        ) : (
+          <a key={contact.id} href={contact.href} className={className}>
+            {content}
+          </a>
+        );
+      })}
     </div>
-  );
-};
+  </AppPageLayout>
+);
 
-export default SupportPage; 
-
+export default SupportPage;

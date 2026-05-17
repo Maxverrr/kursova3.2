@@ -4,7 +4,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import ApiService from '../services/api';
 import CarForm from './CarForm';
 import FilterForm from './FilterForm';
-
 const CarList = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [cars, setCars] = useState([]);
@@ -159,14 +158,14 @@ const CarList = () => {
     if (error) return <div className="text-red-500 text-center py-4">Помилка: {error}</div>;
 
     return (
-        
-        <div className="space-y-6 text-white p-4">
+        <>
+            <div className="space-y-6 text-white p-4 relative z-10">
             <div className="flex flex-col gap-4">
                 {/* Топ оренд місяця */}
-            <div className="mb-8">
+            <div className="mb-8 glass-panel p-6">
                 <h2 className="text-2xl text-center font-bold text-white mb-4">Топ оренди місяця</h2>
                 <div className="grid grid-cols-3 gap-2 md:gap-6">
-                     <div className="relative group rounded-lg overflow-hidden bg-gray-700">
+                     <div className="relative group rounded-lg overflow-hidden glass-card-frame">
                         <Link to="/cars/683ed7492979b884fda5ed4d">
                             <img src="/img/topaudi.JPEG" alt="Audi RS6" className="w-full h-auto" />
                         </Link>
@@ -181,7 +180,7 @@ const CarList = () => {
                         </div>
 
 
-                     <div className="relative group rounded-lg overflow-hidden bg-gray-700">
+                     <div className="relative group rounded-lg overflow-hidden glass-card-frame">
                         <Link to="/cars/683ed7492979b884fda5ed51">
                             <img src="/img/topbmw.JPEG" alt="BMW M5"/>
                         </Link>
@@ -195,7 +194,7 @@ const CarList = () => {
                         </div>
                         </div>   
                         
-                    <div className="relative group rounded-lg overflow-hidden bg-gray-700">
+                    <div className="relative group rounded-lg overflow-hidden glass-card-frame">
                         <Link to="/cars/683ee2745bdbcc2301360100">
                             <img src="/img/topmerc.JPEG" alt="Mercedes-Benz C63"/>
                         </Link>
@@ -212,19 +211,19 @@ const CarList = () => {
             </div>
             
                 {/* Пошук та сортування */}
-                <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+                <div className="glass-panel p-4 sm:p-5 flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
                     <input
                         type="text"
                         placeholder="Пошук автомобілів..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="flex-1 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                        className="flex-1 px-4 py-2 glass-input rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
                     />
                     <div className="flex gap-2 sm:gap-4">
                         <select
                             value={sortBy}
                             onChange={(e) => setSortBy(e.target.value)}
-                            className="px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                            className="px-4 py-2 glass-input rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
                         >    
                             <option value="name">За назвою</option>
                             <option value="price_per_day">За ціною</option>
@@ -233,13 +232,13 @@ const CarList = () => {
                         </select>
                         <button
                             onClick={() => setOrder(order === 'ASC' ? 'DESC' : 'ASC')}
-                            className="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition-colors"
+                            className="px-4 py-2 glass-btn text-white rounded-lg transition-colors"
                         >
                             {order === 'ASC' ? '↑' : '↓'}
                         </button>
                         <button
                             onClick={() => setIsFilterModalOpen(true)}
-                            className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors whitespace-nowrap"
+                            className="px-4 py-2 glass-btn text-white rounded-lg transition-colors whitespace-nowrap"
                         >
                             Розширений пошук
                         </button>
@@ -257,7 +256,7 @@ const CarList = () => {
                                 return (
                                     <span
                                         key={key}
-                                        className="px-2 py-1 bg-gray-700 text-white rounded-full"
+                                        className="px-2 py-1 glass-chip text-white rounded-full"
                                     >
                                         {formattedFilter}
                                     </span>
@@ -278,7 +277,7 @@ const CarList = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                 {cars.map(car => (
-                    <div key={car._id} className="relative w-full aspect-[16/9.924] rounded-lg shadow-lg overflow-hidden group">
+                    <div key={car._id} className="relative w-full aspect-[16/9.924] rounded-xl glass-card-frame overflow-hidden group">
                         {/* Фонове зображення */}
                         <div 
                             className="absolute inset-0 bg-cover bg-center"
@@ -361,15 +360,15 @@ const CarList = () => {
                 <button
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="w-full sm:w-auto px-4 py-2 bg-gray-700 text-white rounded disabled:bg-gray-800 disabled:text-gray-500"
+                    className="w-full sm:w-auto px-4 py-2 glass-btn text-white rounded disabled:opacity-40"
                 >
                     Попередня
                 </button>
-                <span className="py-2">Сторінка {page}</span>
+                <span className="py-2 px-4 glass-chip rounded text-white font-semibold">Сторінка {page}</span>
                 <button
                     onClick={() => setPage(p => p + 1)}
                     disabled={cars.length < 6}
-                    className="w-full sm:w-auto px-4 py-2 bg-gray-700 text-white rounded disabled:bg-gray-800 disabled:text-gray-500"
+                    className="w-full sm:w-auto px-4 py-2 glass-btn text-white rounded disabled:opacity-40"
                 >
                     Наступна
                 </button>
@@ -379,7 +378,7 @@ const CarList = () => {
             {isEditModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
                     <div className="fixed inset-0 bg-black opacity-50"></div>
-                    <div className="bg-gray-800 rounded-lg w-full max-w-4xl mx-4 z-50">
+                    <div className="glass-panel-strong w-full max-w-4xl mx-4 z-50">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-2xl font-bold text-white">Редагувати автомобіль</h2>
@@ -406,7 +405,7 @@ const CarList = () => {
             {isFilterModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
                     <div className="fixed inset-0 bg-black opacity-50"></div>
-                    <div className="bg-gray-800 rounded-lg w-full max-w-4xl mx-4 z-50">
+                    <div className="glass-panel-strong w-full max-w-4xl mx-4 z-50">
                         <div className="p-6">
                             <div className="flex justify-between items-center mb-4">
                                 <h2 className="text-2xl font-bold text-white">Розширений пошук</h2>
@@ -427,6 +426,7 @@ const CarList = () => {
                 </div>
             )}
         </div>
+        </>
     );
 };
 
