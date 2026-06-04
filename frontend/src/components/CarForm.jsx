@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ApiService from '../services/api';
+import { getCarSpecLabels } from '../utils/carDisplay';
 
 const CarForm = ({ onSubmit, initialData = null }) => {
     const [formData, setFormData] = useState({
@@ -23,6 +24,11 @@ const CarForm = ({ onSubmit, initialData = null }) => {
     });
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+
+    const selectedFuelType = referenceData.fuelTypes.find(
+        type => type._id === formData.fuel_type_id
+    );
+    const specLabels = getCarSpecLabels(selectedFuelType?.fuel_type || initialData);
 
     useEffect(() => {
         if (initialData) {
@@ -103,8 +109,8 @@ const CarForm = ({ onSubmit, initialData = null }) => {
     if (error) return <div className="text-red-500 text-center py-4">Помилка: {error}</div>;
 
     return (
-        <form onSubmit={handleSubmit} className="space-y-6 bg-gray-400 p-6 rounded-lg shadow">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <form onSubmit={handleSubmit} className="space-y-6 rounded-lg bg-gray-400 p-4 shadow sm:p-6">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
                 <div>
                     <label className="block text-sm font-medium text-gray-700">Назва</label>
                     <input
@@ -163,7 +169,9 @@ const CarForm = ({ onSubmit, initialData = null }) => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Об'єм двигуна (л)</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                        {specLabels.capacityLabel} ({specLabels.capacityUnit})
+                    </label>
                     <input
                         type="number"
                         name="engine_volume"
@@ -204,7 +212,9 @@ const CarForm = ({ onSubmit, initialData = null }) => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-medium text-gray-700">Витрата палива (л/100км)</label>
+                    <label className="block text-sm font-medium text-gray-700">
+                        {specLabels.consumptionLabel} ({specLabels.consumptionUnit})
+                    </label>
                     <input
                         type="number"
                         name="fuel_consumption"
@@ -257,11 +267,11 @@ const CarForm = ({ onSubmit, initialData = null }) => {
                 </div>
             </div>
 
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end">
                 <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400"
+                    className="w-full rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 sm:w-auto"
                 >
                     {loading ? 'Збереження...' : initialData ? 'Оновити' : 'Створити'}
                 </button>

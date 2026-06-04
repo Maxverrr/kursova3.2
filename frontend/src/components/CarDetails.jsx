@@ -3,10 +3,20 @@ import { useParams, Link, useNavigate, useSearchParams } from 'react-router-dom'
 import ApiService from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import CarForm from './CarForm';
-import DatePicker from 'react-datepicker';
-import "react-datepicker/dist/react-datepicker.css";
-import { uk } from 'date-fns/locale';
 import PremiumBackground from './PremiumBackground';
+import RentModal from './RentModal';
+import {
+    calculateRentalPrice,
+    applyRentalStartTime,
+    applyRentalEndTime,
+    buildRentalOptionsPayload,
+} from '../utils/rentalPricing';
+import {
+    formatCapacity,
+    formatConsumption,
+    getCarSpecLabels,
+    withImageKitBackgroundRemoval,
+} from '../utils/carDisplay';
 
 const CarDetails = () => {
     const { id } = useParams();
@@ -25,7 +35,16 @@ const CarDetails = () => {
         startDate: null,
         endDate: null
     });
-    const [totalPrice, setTotalPrice] = useState(0);
+    const [priceBreakdown, setPriceBreakdown] = useState(null);
+    const [rentOptions, setRentOptions] = useState({
+        delivery: false,
+        deliveryKm: '',
+        returnElsewhere: false,
+        returnKm: '',
+        childSeat: false,
+        bikeRack: false,
+        fullInsurance: false,
+    });
     const [rentError, setRentError] = useState(null);
     const [existingRentals, setExistingRentals] = useState([]);
 
@@ -52,11 +71,8 @@ const CarDetails = () => {
                 // Отримуємо дані про оренду, тільки якщо користувач автентифікований
                 if (user) {
                     try {
-                        const rentalsResponse = await ApiService.getRentals();
-                        const carRentals = rentalsResponse.filter(rental => 
-                            rental.car_id && rental.car_id._id === id
-                        );
-                        setExistingRentals(carRentals.map(rental => ({
+                        const rentalsResponse = await ApiService.getCarRentals(id);
+                        setExistingRentals(rentalsResponse.map(rental => ({
                             start: new Date(rental.start_date),
                             end: new Date(rental.end_date)
                         })));
@@ -109,21 +125,43 @@ const CarDetails = () => {
         }
     };
 
+    const recalculatePrice = (start, end, options) => {
+        if (!start || !end || !car) {
+            setPriceBreakdown(null);
+            return;
+        }
+        const pricing = calculateRentalPrice(car.price_per_day, start, end, options);
+        setPriceBreakdown(pricing);
+    };
+
+    const resetRentForm = () => {
+        setRentDates({ startDate: null, endDate: null });
+        setRentOptions({
+            delivery: false,
+            deliveryKm: '',
+            returnElsewhere: false,
+            returnKm: '',
+            childSeat: false,
+            bikeRack: false,
+            fullInsurance: false,
+        });
+        setPriceBreakdown(null);
+        setRentError(null);
+    };
+
+    const handleRentOptionChange = (field, value) => {
+        const nextOptions = { ...rentOptions, [field]: value };
+        setRentOptions(nextOptions);
+        recalculatePrice(rentDates.startDate, rentDates.endDate, nextOptions);
+    };
+
     const handleRentDatesChange = (dates) => {
         const [start, end] = dates;
         setRentDates({
             startDate: start,
             endDate: end
         });
-
-        if (start && end && car) {
-            const days = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
-            if (days > 0) {
-                setTotalPrice(days * car.price_per_day);
-            }
-        } else {
-            setTotalPrice(0);
-        }
+        recalculatePrice(start, end, rentOptions);
     };
 
     // Функція для перевірки, чи дата заблокована
@@ -160,29 +198,34 @@ const CarDetails = () => {
             return;
         }
 
-        try {
-            // Конвертуємо дати в формат ISO з часовою зоною
-            const startDateTime = new Date(rentDates.startDate);
-            const endDateTime = new Date(rentDates.endDate);
-            
-            console.log('Submitting rental with dates:', {
-                startDate: startDateTime.toISOString(),
-                endDate: endDateTime.toISOString(),
-                originalStartDate: rentDates.startDate,
-                originalEndDate: rentDates.endDate
-            });
+        if (rentOptions.delivery && (!rentOptions.deliveryKm || Number(rentOptions.deliveryKm) <= 0)) {
+            setRentError('Вкажіть відстань для доставки авто додому');
+            return;
+        }
 
-            // Перевіряємо доступність
+        if (rentOptions.returnElsewhere && (!rentOptions.returnKm || Number(rentOptions.returnKm) <= 0)) {
+            setRentError('Вкажіть відстань для повернення в іншому місці');
+            return;
+        }
+
+        try {
+            const startDateTime = applyRentalStartTime(rentDates.startDate);
+            const endDateTime = applyRentalEndTime(rentDates.endDate);
+            const pricing = calculateRentalPrice(
+                car.price_per_day,
+                rentDates.startDate,
+                rentDates.endDate,
+                rentOptions
+            );
+            const optionsPayload = buildRentalOptionsPayload(pricing, rentOptions);
+
             const availability = await ApiService.checkCarAvailability(
                 id,
                 startDateTime.toISOString(),
                 endDateTime.toISOString()
             );
 
-            console.log('Availability response:', availability);
-
             if (!availability.available) {
-                // Форматуємо повідомлення про дати, що перетинаються
                 const overlappingDatesStr = availability.overlappingDates
                     .map(dates => `${formatDate(dates.start)} - ${formatDate(dates.end)}`)
                     .join(', ');
@@ -195,19 +238,15 @@ const CarDetails = () => {
                 client_id: user.id,
                 start_date: startDateTime.toISOString(),
                 end_date: endDateTime.toISOString(),
-                total_price: totalPrice
+                base_rental_price: pricing.basePrice,
+                options: optionsPayload,
+                total_price: pricing.totalPrice
             };
 
-            console.log('Creating rental with data:', rentalData);
+            await ApiService.createRental(rentalData);
 
-            // Створюємо оренду з правильним форматом дати
-            const response = await ApiService.createRental(rentalData);
-            
-            console.log('Rental creation response:', response);
-
-            // Закриваємо модальне вікно та показуємо повідомлення про успіх
             setIsRentModalOpen(false);
-            // alert('Оренду успішно оформлено!');
+            resetRentForm();
             navigate('/my-rentals');
         } catch (err) {
             console.error('Rental submission error:', err);
@@ -252,74 +291,76 @@ const CarDetails = () => {
         </>
     );
 
+    const specLabels = getCarSpecLabels(car);
+
     return (
         <>
             <PremiumBackground variant="details" />
             <div className="min-h-screen w-full relative">
-            <div className="container mx-auto px-4 pt-24 pb-4 relative z-10">
+            <div className="container mx-auto px-4 pt-[calc(var(--site-header-height)+1rem)] pb-4 relative z-10">
                 <Link 
                     to={`/MainApp?page=${returnPage}`}
-                    className="inline-block mb-8 px-6 py-2 glass-btn text-white rounded-full transition-colors"
+                    className="mb-5 inline-block rounded-full px-5 py-2 text-sm text-white transition-colors glass-btn sm:mb-8 sm:px-6 sm:text-base"
                 >
                     ← Назад до списку
                 </Link>
 
                 <div className="glass-panel-strong overflow-hidden">
-                    <div className="relative h-96">
+                    <div className="car-showroom-bg relative h-64 overflow-hidden sm:h-80 lg:h-96">
                         <img 
-                            src={car.photo || '/placeholder-car.jpg'} 
+                            src={withImageKitBackgroundRemoval(car.photo) || '/placeholder-car.jpg'} 
                             alt={car.name}
-                            className="w-full h-full object-cover"
+                            className="relative z-[1] h-full w-full object-cover drop-shadow-[0_34px_45px_rgba(0,0,0,0.6)]"
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
-                        <h1 className="absolute bottom-6 left-6 text-4xl font-bold text-white">{car.name}</h1>
+                        <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/75 via-transparent to-black/20" />
+                        <h1 className="absolute bottom-5 left-4 right-4 z-[3] text-2xl font-bold leading-tight text-white sm:bottom-6 sm:left-6 sm:text-4xl">{car.name}</h1>
                     </div>
 
-                    <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-6">
+                    <div className="grid grid-cols-1 gap-5 p-4 sm:p-6 md:grid-cols-2 md:gap-8">
+                        <div className="space-y-5 sm:space-y-6">
                             <div className="glass-section">
-                                <h2 className="text-2xl font-bold text-white mb-4">Характеристики</h2>
+                                <h2 className="mb-4 text-xl font-bold text-white sm:text-2xl">Характеристики</h2>
                                 <div className="space-y-3 text-gray-300">
-                                    <p className="flex justify-between">
+                                    <p className="flex justify-between gap-4">
                                         <span>Потужність:</span>
-                                        <span className="font-semibold">{car.horsepower} к.с.</span>
+                                        <span className="text-right font-semibold">{car.horsepower} к.с.</span>
                                     </p>
-                                    <p className="flex justify-between">
-                                        <span>Об'єм двигуна:</span>
-                                        <span className="font-semibold">{car.engine_volume}л</span>
+                                    <p className="flex justify-between gap-4">
+                                        <span>{specLabels.capacityLabel}:</span>
+                                        <span className="text-right font-semibold">{formatCapacity(car.engine_volume, car)}</span>
                                     </p>
-                                    <p className="flex justify-between">
-                                        <span>Розхід палива:</span>
-                                        <span className="font-semibold">{car.fuel_consumption}л/100км</span>
+                                    <p className="flex justify-between gap-4">
+                                        <span>{specLabels.consumptionLabel}:</span>
+                                        <span className="text-right font-semibold">{formatConsumption(car.fuel_consumption, car)}</span>
                                     </p>
-                                    <p className="flex justify-between">
+                                    <p className="flex justify-between gap-4">
                                         <span>Тип палива:</span>
-                                        <span className="font-semibold">{car.fuel_type?.fuel_type}</span>
+                                        <span className="text-right font-semibold">{car.fuel_type?.fuel_type}</span>
                                     </p>
-                                    <p className="flex justify-between">
+                                    <p className="flex justify-between gap-4">
                                         <span>Тип кузова:</span>
-                                        <span className="font-semibold">{car.body_type?.type_name}</span>
+                                        <span className="text-right font-semibold">{car.body_type?.type_name}</span>
                                     </p>
-                                    <p className="flex justify-between">
+                                    <p className="flex justify-between gap-4">
                                         <span>Клас:</span>
-                                        <span className="font-semibold">{car.class?.class_name}</span>
+                                        <span className="text-right font-semibold">{car.class?.class_name}</span>
                                     </p>
-                                    <p className="flex justify-between">
+                                    <p className="flex justify-between gap-4">
                                         <span>Колір:</span>
-                                        <span className="font-semibold">{car.color}</span>
+                                        <span className="text-right font-semibold">{car.color}</span>
                                     </p>
                                 </div>
                             </div>
 
                             <div className="glass-section">
-                                <h2 className="text-2xl font-bold text-white mb-4">Ціна</h2>
-                                <p className="text-4xl font-bold text-blue-400">{car.price_per_day}₴ <span className="text-lg text-gray-400">/день</span></p>
+                                <h2 className="mb-4 text-xl font-bold text-white sm:text-2xl">Ціна</h2>
+                                <p className="text-3xl font-bold text-blue-400 sm:text-4xl">{car.price_per_day}₴ <span className="text-base text-gray-400 sm:text-lg">/день</span></p>
                             </div>
                         </div>
 
-                        <div className="space-y-6">
+                        <div className="space-y-5 sm:space-y-6">
                             <div className="glass-section">
-                                <h2 className="text-2xl font-bold text-white mb-4">Статус</h2>
+                                <h2 className="mb-4 text-xl font-bold text-white sm:text-2xl">Статус</h2>
                                 <span className={`px-4 py-2 rounded-full text-sm ${
                                     car.status?.status ? 'bg-green-800/80 text-green-200' : 'bg-red-800/80 text-red-200'
                                 }`}>
@@ -335,24 +376,25 @@ const CarDetails = () => {
                                             return;
                                         }
                                         setIsRentModalOpen(true);
+                                        resetRentForm();
                                     }}
-                                    className="w-full px-6 py-3 glass-cta text-white rounded-lg transition-colors text-lg font-semibold"
+                                    className="w-full rounded-lg px-6 py-3 text-base font-semibold text-white transition-colors glass-cta sm:text-lg"
                                 >
                                     Орендувати
                                 </button>
                             )}
 
                             {user?.role === 'admin' && (
-                                <div className="space-y-3 mt-4">
+                                <div className="mt-4 space-y-3">
                                     <button 
                                         onClick={() => setIsEditModalOpen(true)}
-                                        className="w-full px-6 py-3 bg-yellow-600 text-white rounded-lg hover:bg-pink-500 transition-colors text-lg font-semibold"
+                                        className="w-full rounded-lg bg-yellow-600 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-pink-500 sm:text-lg"
                                     >
                                         Редагувати
                                     </button>
                                     <button 
                                         onClick={handleDelete}
-                                        className="w-full px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-lg font-semibold"
+                                        className="w-full rounded-lg bg-red-600 px-6 py-3 text-base font-semibold text-white transition-colors hover:bg-red-700 sm:text-lg"
                                     >
                                         Видалити
                                     </button>
@@ -363,8 +405,8 @@ const CarDetails = () => {
 
                     {/* Секція відгуків */}
                     <div className="border-t glass-divider">
-                        <div className="p-6">
-                            <h2 className="text-2xl font-bold text-white mb-6">Відгуки</h2>
+                        <div className="p-4 sm:p-6">
+                            <h2 className="mb-6 text-xl font-bold text-white sm:text-2xl">Відгуки</h2>
                             
                             {/* Форма додавання відгуку */}
                             {user && (
@@ -435,107 +477,28 @@ const CarDetails = () => {
 
             {/* Модальне вікно оренди */}
             {isRentModalOpen && (
-                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="glass-panel-strong w-full max-w-md">
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-xl font-bold text-white">Оформлення оренди</h2>
-                                <button
-                                    onClick={() => setIsRentModalOpen(false)}
-                                    className="text-gray-400 hover:text-gray-200"
-                                >
-                                    ×
-                                </button>
-                            </div>
-
-                            {rentError && (
-                                <div className="mb-4 p-3 bg-red-900/50 text-red-200 rounded">
-                                    {rentError}
-                                </div>
-                            )}
-
-                            <form onSubmit={handleRentSubmit} className="space-y-4">
-                                <div>
-                                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                                        Оберіть дати оренди
-                                    </label>
-                                    <DatePicker
-                                        selected={rentDates.startDate}
-                                        onChange={handleRentDatesChange}
-                                        startDate={rentDates.startDate}
-                                        endDate={rentDates.endDate}
-                                        selectsRange
-                                        inline
-                                        minDate={new Date()}
-                                        locale={uk}
-                                        dateFormat="dd.MM.yyyy"
-                                        renderDayContents={renderDayContents}
-                                        excludeDates={existingRentals.flatMap(rental => {
-                                            const dates = [];
-                                            let currentDate = new Date(rental.start);
-                                            while (currentDate <= rental.end) {
-                                                dates.push(new Date(currentDate));
-                                                currentDate.setDate(currentDate.getDate() + 1);
-                                            }
-                                            return dates;
-                                        })}
-                                        className="w-full bg-gray-700 text-white rounded-lg"
-                                    />
-                                </div>
-
-                                {totalPrice > 0 && (
-                                    <div className="bg-gray-700/50 p-4 rounded">
-                                        <h3 className="text-lg font-semibold text-white mb-2">
-                                            Підсумок замовлення
-                                        </h3>
-                                        <div className="space-y-2 text-gray-300">
-                                            <div className="flex justify-between">
-                                                <span>Ціна за день:</span>
-                                                <span>{car.price_per_day}₴</span>
-                                            </div>
-                                            <div className="flex justify-between">
-                                                <span>Кількість днів:</span>
-                                                <span>
-                                                    {Math.ceil(
-                                                        (rentDates.endDate - rentDates.startDate) /
-                                                        (1000 * 60 * 60 * 24)
-                                                    )}
-                                                </span>
-                                            </div>
-                                            <div className="flex justify-between font-semibold text-white border-t border-gray-600 pt-2 mt-2">
-                                                <span>Загальна сума:</span>
-                                                <span>{totalPrice}₴</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <div className="flex justify-end space-x-3 mt-6">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsRentModalOpen(false)}
-                                        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-500"
-                                    >
-                                        Скасувати
-                                    </button>
-                                    <button
-                                        type="submit"
-                                        disabled={!rentDates.startDate || !rentDates.endDate}
-                                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-500 disabled:bg-gray-500 disabled:cursor-not-allowed"
-                                    >
-                                        Підтвердити оренду
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+                <RentModal
+                    car={car}
+                    rentDates={rentDates}
+                    rentOptions={rentOptions}
+                    priceBreakdown={priceBreakdown}
+                    rentError={rentError}
+                    existingRentals={existingRentals}
+                    onClose={() => {
+                        setIsRentModalOpen(false);
+                        resetRentForm();
+                    }}
+                    onSubmit={handleRentSubmit}
+                    onDatesChange={handleRentDatesChange}
+                    onOptionChange={handleRentOptionChange}
+                    renderDayContents={renderDayContents}
+                />
             )}
 
             {/* Модальне вікно авторизації */}
             {isAuthModalOpen && (
                 <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                    <div className="glass-panel-strong w-full max-w-md p-6">
+                        <div className="glass-panel-strong w-full max-w-md p-4 sm:p-6">
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="text-xl font-bold text-white">Необхідна авторизація</h2>
                             <button
@@ -573,10 +536,10 @@ const CarDetails = () => {
             {isEditModalOpen && (
                 <div className="fixed inset-0 flex items-center justify-center z-50">
                     <div className="fixed inset-0 bg-black opacity-50"></div>
-                    <div className="glass-panel-strong w-full max-w-4xl mx-4 z-50 max-h-[90vh] overflow-y-auto">
-                        <div className="p-6">
-                            <div className="flex justify-between items-center mb-4">
-                                <h2 className="text-2xl font-bold text-white">Редагувати автомобіль</h2>
+                    <div className="glass-panel-strong z-50 mx-3 max-h-[90vh] w-full max-w-4xl overflow-y-auto sm:mx-4">
+                        <div className="p-4 sm:p-6">
+                            <div className="mb-4 flex items-start justify-between gap-4">
+                                <h2 className="text-xl font-bold text-white sm:text-2xl">Редагувати автомобіль</h2>
                                 <button
                                     onClick={() => setIsEditModalOpen(false)}
                                     className="text-gray-400 hover:text-gray-200 text-2xl font-bold"

@@ -32,12 +32,12 @@ function CarManagement() {
     <>
       <PremiumBackground variant="fleet" />
       <div className="min-h-screen w-full relative">
-        <div className="container mx-auto px-4 pt-28 pb-8">
-        <div className="flex justify-between items-center mb-8">
+        <div className="container mx-auto px-4 pt-[calc(var(--site-header-height)+1.5rem)] pb-8">
+        <div className="mb-6 flex flex-col gap-3 sm:mb-8 sm:flex-row sm:items-center sm:justify-between">
           {user?.role === 'admin' && (
             <button
               onClick={() => setIsModalOpen(true)}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors"
+              className="w-full rounded bg-green-500 px-4 py-2 text-white transition-colors hover:bg-green-600 sm:w-auto"
             >
               Додати новий автомобіль
             </button>
@@ -48,10 +48,10 @@ function CarManagement() {
 
         {isModalOpen && (
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-            <div className="glass-panel-strong max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="p-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-bold text-white">Додати новий автомобіль</h2>
+            <div className="glass-panel-strong max-h-[90vh] w-full max-w-4xl overflow-y-auto">
+              <div className="p-4 sm:p-6">
+                <div className="mb-4 flex items-start justify-between gap-4">
+                  <h2 className="text-xl font-bold text-white sm:text-2xl">Додати новий автомобіль</h2>
                   <button
                     onClick={() => setIsModalOpen(false)}
                     className="text-gray-300 hover:text-gray-500"

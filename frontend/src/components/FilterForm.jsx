@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import ApiService from '../services/api';
+import { getCarSpecLabels } from '../utils/carDisplay';
 
 const FilterForm = ({ onApplyFilters, onClose, initialFilters = {} }) => {
     const [referenceData, setReferenceData] = useState({
@@ -106,10 +107,12 @@ const FilterForm = ({ onApplyFilters, onClose, initialFilters = {} }) => {
     const inputClassName = "w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent";
     const labelClassName = "block text-sm font-medium text-gray-200";
     const selectClassName = "mt-1 block w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-blue-500";
+    const selectedFuelType = referenceData.fuelTypes.find(type => type._id === filters.fuelType);
+    const specLabels = getCarSpecLabels(selectedFuelType?.fuel_type || '');
 
     return (
         <form onSubmit={handleSubmit} className="space-y-6 text-white">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6">
                 {/* Price Range */}
                 <div className="space-y-2">
                     <label className={labelClassName}>Ціна (₴/день)</label>
@@ -135,7 +138,9 @@ const FilterForm = ({ onApplyFilters, onClose, initialFilters = {} }) => {
 
                 {/* Engine Volume Range */}
                 <div className="space-y-2">
-                    <label className={labelClassName}>Об'єм двигуна (л)</label>
+                    <label className={labelClassName}>
+                        {specLabels.capacityLabel} ({specLabels.capacityUnit})
+                    </label>
                     <div className="flex gap-2">
                         <input
                             type="number"
@@ -258,17 +263,17 @@ const FilterForm = ({ onApplyFilters, onClose, initialFilters = {} }) => {
                 </div>
             </div>
 
-            <div className="flex justify-end gap-4">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end sm:gap-4">
                 <button
                     type="button"
                     onClick={handleReset}
-                    className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600 transition-colors"
+                    className="rounded-md bg-gray-700 px-4 py-2 text-white transition-colors hover:bg-gray-600"
                 >
                     Скинути
                 </button>
                 <button
                     type="submit"
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    className="rounded-md bg-blue-600 px-4 py-2 text-white transition-colors hover:bg-blue-700"
                 >
                     Застосувати
                 </button>

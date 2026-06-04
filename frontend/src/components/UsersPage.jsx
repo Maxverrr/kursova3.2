@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import ApiService from '../services/api';
 import AppPageLayout, {
   pagePanelClass,
@@ -27,23 +27,28 @@ const UsersPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [editingUser, setEditingUser] = useState(null);
+  const [filters, setFilters] = useState({ search: '', role: '' });
+  const [draftFilters, setDraftFilters] = useState({ search: '', role: '' });
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const data = await ApiService.getUsers();
+      const params = Object.fromEntries(
+        Object.entries(filters).filter(([, value]) => value)
+      );
+      const data = await ApiService.getUsers(params);
       setUsers(data);
     } catch (err) {
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers]);
 
   const handleEdit = async (userId, updatedData) => {
     try {
@@ -63,6 +68,16 @@ const UsersPage = () => {
     } catch (err) {
       setError(err.message);
     }
+  };
+
+  const applyFilters = () => {
+    setFilters(draftFilters);
+  };
+
+  const clearFilters = () => {
+    const emptyFilters = { search: '', role: '' };
+    setDraftFilters(emptyFilters);
+    setFilters(emptyFilters);
   };
 
   if (loading) {
@@ -91,6 +106,48 @@ const UsersPage = () => {
         </span>
       }
     >
+      <div className={`${pagePanelClass} mb-5 p-4`}>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-[1fr_220px_auto_auto] md:items-end">
+          <div>
+            <label className="text-sm text-white/70">Пошук</label>
+            <input
+              type="search"
+              value={draftFilters.search}
+              onChange={(e) => setDraftFilters((current) => ({ ...current, search: e.target.value }))}
+              placeholder="Email, телефон, ім'я, прізвище або по батькові"
+              className={pageInputClass}
+            />
+          </div>
+          <div>
+            <label className="text-sm text-white/70">Роль</label>
+            <select
+              value={draftFilters.role}
+              onChange={(e) => setDraftFilters((current) => ({ ...current, role: e.target.value }))}
+              className={pageInputClass}
+            >
+              <option value="">Усі</option>
+              <option value="user">Користувачі</option>
+              <option value="admin">Адміністратори</option>
+            </select>
+          </div>
+          <button
+            type="button"
+            onClick={applyFilters}
+            className="rounded-lg bg-blue-600 px-4 py-2 font-medium text-white hover:bg-blue-500"
+          >
+            Застосувати
+          </button>
+          <button
+            type="button"
+            onClick={clearFilters}
+            className="rounded-lg border border-white/20 px-4 py-2 text-white/80 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={!draftFilters.search && !draftFilters.role}
+          >
+            Очистити
+          </button>
+        </div>
+      </div>
+
       <div className={pagePanelClass}>
         <div className="overflow-x-auto">
           <table className="min-w-full divide-y divide-white/10">
@@ -107,7 +164,13 @@ const UsersPage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
-              {users.map((user) => (
+              {users.length === 0 ? (
+                <tr>
+                  <td colSpan={8} className={`${pageTableCellClass} text-center text-white/50`}>
+                    Користувачів не знайдено
+                  </td>
+                </tr>
+              ) : users.map((user) => (
                 <tr key={user._id} className="transition hover:bg-white/5">
                   <td className={pageTableCellClass}>{user.email}</td>
                   <td className={pageTableCellClass}>{user.phone_number || '—'}</td>

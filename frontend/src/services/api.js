@@ -138,8 +138,9 @@ class ApiService {
     }
 
     // Users
-    static async getUsers() {
-        return this.request('/users');
+    static async getUsers(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        return this.request(`/users${queryString ? `?${queryString}` : ''}`);
     }
 
     static async updateUser(userId, userData) {
@@ -156,9 +157,14 @@ class ApiService {
     }
 
     // Rentals
-    static async getRentals() {
-        const response = await this.request('/rentals');
+    static async getRentals(params = {}) {
+        const queryString = new URLSearchParams(params).toString();
+        const response = await this.request(`/rentals${queryString ? `?${queryString}` : ''}`);
         return response;
+    }
+
+    static async getCarRentals(carId) {
+        return this.request(`/cars/${carId}/rentals`);
     }
 
     static async updateRental(rentalId, rentalData) {
@@ -188,6 +194,10 @@ class ApiService {
             method: 'POST',
             body: JSON.stringify(rentalData)
         });
+    }
+
+    static async getAdminStatistics() {
+        return this.request('/admin/statistics');
     }
 
     static async deleteReview(reviewId) {

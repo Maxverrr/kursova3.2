@@ -1,8 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import ApiService from '../services/api';
+import RentalEditModal from './RentalEditModal';
 import AppPageLayout, { pagePanelClass } from './AppPageLayout';
+
+const RENTAL_EDIT_DEADLINE_MS = 2 * 24 * 60 * 60 * 1000;
 
 const formatDate = (dateString) => {
   try {
@@ -21,10 +23,19 @@ const formatDate = (dateString) => {
   }
 };
 
-const getRentalStatus = (startDate, endDate) => {
+const getRentalStatusFromRental = (rental) => {
+  if (rental.status === 'cancelled') {
+    return {
+      label: 'Скасована',
+      badge: 'bg-red-500/20 text-red-300 border-red-500/30',
+      accent: 'border-red-500',
+      progress: 0,
+    };
+  }
+
   const now = Date.now();
-  const start = new Date(startDate).getTime();
-  const end = new Date(endDate).getTime();
+  const start = new Date(rental.start_date).getTime();
+  const end = new Date(rental.end_date).getTime();
   if (now < start) {
     return {
       label: 'Майбутня',
@@ -50,6 +61,10 @@ const getRentalStatus = (startDate, endDate) => {
   };
 };
 
+const canModifyRental = (rental) =>
+  rental.status !== 'cancelled' &&
+  new Date(rental.start_date).getTime() - Date.now() >= RENTAL_EDIT_DEADLINE_MS;
+
 const StatCard = ({ label, value, hint }) => (
   <div className={`${pagePanelClass} p-5`}>
     <p className="text-xs font-semibold uppercase tracking-wider text-white/45">{label}</p>
@@ -58,11 +73,32 @@ const StatCard = ({ label, value, hint }) => (
   </div>
 );
 
+const getSelectedOptions = (options) => {
+  if (!options) return [];
+  const items = [];
+  if (options.delivery?.enabled) {
+    items.push(`Доставка додому (${options.delivery.km} км) — ${options.delivery.price} грн`);
+  }
+  if (options.return_elsewhere?.enabled) {
+    items.push(`Повернення в іншому місці (${options.return_elsewhere.km} км) — ${options.return_elsewhere.price} грн`);
+  }
+  if (options.child_seat?.enabled) {
+    items.push(`Дитяче крісло — ${options.child_seat.price} грн`);
+  }
+  if (options.bike_rack?.enabled) {
+    items.push(`Кріплення для велосипедів — ${options.bike_rack.price} грн`);
+  }
+  if (options.full_insurance?.enabled) {
+    items.push(`Повне страхування — ${options.full_insurance.price} грн`);
+  }
+  return items;
+};
+
 const UserRentalsPage = () => {
   const [rentals, setRentals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useAuth();
+  const [editingRental, setEditingRental] = useState(null);
 
   useEffect(() => {
     fetchUserRentals();
@@ -72,10 +108,7 @@ const UserRentalsPage = () => {
     try {
       setLoading(true);
       setError(null);
-      const allRentals = await ApiService.getRentals();
-      const userRentals = allRentals.filter(
-        (rental) => rental.client_id && rental.client_id._id === user.id
-      );
+      const userRentals = await ApiService.getRentals();
       setRentals(userRentals);
     } catch (err) {
       setError(err.message);
@@ -84,15 +117,39 @@ const UserRentalsPage = () => {
     }
   };
 
+  const handleEdit = async (rentalId, updatedData) => {
+    try {
+      setError(null);
+      await ApiService.updateRental(rentalId, updatedData);
+      setEditingRental(null);
+      await fetchUserRentals();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
+  const handleCancel = async (rentalId) => {
+    if (!window.confirm('Ви впевнені, що хочете скасувати це бронювання?')) return;
+    try {
+      setError(null);
+      await ApiService.deleteRental(rentalId);
+      await fetchUserRentals();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   const stats = useMemo(() => {
     const now = Date.now();
     let active = 0;
     let totalSpent = 0;
     rentals.forEach((r) => {
-      totalSpent += Number(r.total_price) || 0;
+      if (r.status !== 'cancelled') {
+        totalSpent += Number(r.total_price) || 0;
+      }
       const start = new Date(r.start_date).getTime();
       const end = new Date(r.end_date).getTime();
-      if (now >= start && now <= end) active += 1;
+      if (r.status !== 'cancelled' && now >= start && now <= end) active += 1;
     });
     return { total: rentals.length, active, totalSpent };
   }, [rentals]);
@@ -142,7 +199,8 @@ const UserRentalsPage = () => {
       ) : (
         <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
           {rentals.map((rental) => {
-            const status = getRentalStatus(rental.start_date, rental.end_date);
+            const status = getRentalStatusFromRental(rental);
+            const canModify = canModifyRental(rental);
             return (
               <article
                 key={rental._id}
@@ -194,14 +252,62 @@ const UserRentalsPage = () => {
                   </div>
                 )}
 
-                <div className="flex items-end justify-between border-t border-white/10 pt-4">
-                  <p className="text-sm text-white/50">Сума оренди</p>
-                  <p className="text-2xl font-bold text-blue-400">{rental.total_price} ₴</p>
+                {getSelectedOptions(rental.options).length > 0 && (
+                  <div className="mb-4 rounded-lg border border-white/10 bg-white/5 p-3 text-sm">
+                    <p className="mb-2 text-white/45">Додаткові опції</p>
+                    <ul className="space-y-1 text-white/75">
+                      {getSelectedOptions(rental.options).map((item) => (
+                        <li key={item}>• {item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="border-t border-white/10 pt-4">
+                  <div className="flex items-end justify-between gap-4">
+                    <p className="text-sm text-white/50">Сума оренди</p>
+                    <p className="text-2xl font-bold text-blue-400">{rental.total_price} ₴</p>
+                  </div>
+
+                  <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xs text-white/45">
+                      {canModify
+                        ? 'Редагування та скасування доступні за 2 дня до початку оренди.'
+                        : 'Редагування і скасування вже недоступні.'}
+                    </p>
+                    <div className="flex flex-wrap gap-3">
+                      <button
+                        type="button"
+                        onClick={() => setEditingRental(rental)}
+                        disabled={!canModify}
+                        className="rounded-lg border border-amber-400/40 px-3 py-2 text-sm font-medium text-amber-300 hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:border-white/10 disabled:text-white/30 disabled:hover:bg-transparent"
+                      >
+                        Редагувати
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleCancel(rental._id)}
+                        disabled={!canModify}
+                        className="rounded-lg border border-red-400/40 px-3 py-2 text-sm font-medium text-red-300 hover:bg-red-500/10 disabled:cursor-not-allowed disabled:border-white/10 disabled:text-white/30 disabled:hover:bg-transparent"
+                      >
+                        Скасувати
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </article>
             );
           })}
         </div>
+      )}
+
+      {editingRental && (
+        <RentalEditModal
+          rental={editingRental}
+          title="Редагувати моє бронювання"
+          onClose={() => setEditingRental(null)}
+          onSave={(updatedData) => handleEdit(editingRental._id, updatedData)}
+        />
       )}
     </AppPageLayout>
   );

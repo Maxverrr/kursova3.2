@@ -7,9 +7,18 @@ const connectDB = require('./config/database');
 const { User, BodyType, Class, FuelType, Status, Car, Review, Rental } = require('./models');
 const mongoose = require('mongoose');
 const { uploadImageFromUrl } = require('./utils/imageKit');
+const {
+  applyRentalTimes,
+  applyRentalStartTime,
+  applyRentalEndTime,
+  validateRentalPrice,
+  calculateRentalPrice,
+  normalizeOptions,
+} = require('./utils/rentalPricing');
 
 const app = express();
 const port = process.env.PORT || 3001;
+const RENTAL_EDIT_DEADLINE_MS = 2 * 24 * 60 * 60 * 1000;
 
 // Middleware
 app.use(cors({
@@ -51,6 +60,44 @@ const isAdmin = (req, res, next) => {
     return res.status(403).json({ error: 'Потрібні права адміністратора' });
   }
   next();
+};
+
+const canModifyBeforeRental = (startDate) =>
+  new Date(startDate).getTime() - Date.now() >= RENTAL_EDIT_DEADLINE_MS;
+
+const buildOptionsSnapshot = (normalized, pricing) => ({
+  delivery: {
+    enabled: normalized.delivery,
+    km: normalized.delivery ? normalized.deliveryKm : 0,
+    price: pricing.deliveryPrice,
+  },
+  return_elsewhere: {
+    enabled: normalized.returnElsewhere,
+    km: normalized.returnElsewhere ? normalized.returnKm : 0,
+    price: pricing.returnPrice,
+  },
+  child_seat: {
+    enabled: normalized.childSeat,
+    price: pricing.childSeatPrice,
+  },
+  bike_rack: {
+    enabled: normalized.bikeRack,
+    price: pricing.bikeRackPrice,
+  },
+  full_insurance: {
+    enabled: normalized.fullInsurance,
+    price: pricing.insurancePrice,
+  },
+});
+
+const validateRentalOptions = (normalized) => {
+  if (normalized.delivery && normalized.deliveryKm <= 0) {
+    return 'Вкажіть відстань для доставки авто';
+  }
+  if (normalized.returnElsewhere && normalized.returnKm <= 0) {
+    return 'Вкажіть відстань для повернення в іншому місці';
+  }
+  return null;
 };
 
 // Public reference data endpoints
@@ -168,6 +215,30 @@ app.get('/api/cars', async (req, res) => {
       if (status) {
         query.status = status._id;
       }
+    }
+
+    if (sortBy === 'fuel_consumption') {
+      const parseFuelConsumption = (value) => {
+        const match = String(value || '').replace(',', '.').match(/\d+(\.\d+)?/);
+        return match ? Number(match[0]) : Number.POSITIVE_INFINITY;
+      };
+
+      const allCars = await Car.find(query)
+        .populate('body_type')
+        .populate('class')
+        .populate('fuel_type')
+        .populate('status');
+
+      const direction = order.toLowerCase() === 'desc' ? -1 : 1;
+      const cars = allCars
+        .sort((a, b) => {
+          const diff = parseFuelConsumption(a.fuel_consumption) - parseFuelConsumption(b.fuel_consumption);
+          if (diff !== 0) return diff * direction;
+          return a.name.localeCompare(b.name, 'uk');
+        })
+        .slice(skip, skip + limit);
+
+      return res.json(cars);
     }
 
     const cars = await Car.find(query)
@@ -418,6 +489,7 @@ app.post('/api/cars/:id/check-availability', auth, async (req, res) => {
     // Find overlapping rentals
     const overlappingRentals = await Rental.find({
       car_id: carId,
+      status: { $ne: 'cancelled' },
       $or: [
         {
           start_date: { $lte: end },
@@ -445,29 +517,61 @@ app.post('/api/cars/:id/check-availability', auth, async (req, res) => {
   }
 });
 
+app.get('/api/cars/:id/rentals', auth, async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ error: 'Неправильний формат ID автомобіля' });
+    }
+
+    const rentals = await Rental.find({
+      car_id: req.params.id,
+      status: { $ne: 'cancelled' },
+    }).select('start_date end_date status');
+
+    res.json(rentals);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch car rentals' });
+  }
+});
+
 // Create rental
 app.post('/api/rentals', auth, async (req, res) => {
   try {
-    const { car_id, start_date, end_date, total_price } = req.body;
+    const { car_id, start_date, end_date, total_price, options } = req.body;
 
     if (!car_id || !start_date || !end_date || total_price === undefined) {
       return res.status(400).json({ error: 'Відсутні обов\'язкові поля' });
     }
 
-    const start = new Date(start_date);
-    const end = new Date(end_date);
+    const rawStart = new Date(start_date);
+    const rawEnd = new Date(end_date);
 
-    if (isNaN(start.getTime()) || isNaN(end.getTime()) || start >= end) {
+    if (isNaN(rawStart.getTime()) || isNaN(rawEnd.getTime()) || rawStart > rawEnd) {
       return res.status(400).json({ error: 'Неправильний діапазон дат' });
     }
+
+    const { start, end } = applyRentalTimes(rawStart, rawEnd);
 
     const car = await Car.findById(car_id);
     if (!car) {
       return res.status(404).json({ error: 'Автомобіль не знайдено' });
     }
 
+    if (!validateRentalPrice(car.price_per_day, rawStart, rawEnd, options || {}, total_price)) {
+      return res.status(400).json({ error: 'Невірна сума бронювання' });
+    }
+
+    const normalized = normalizeOptions(options || {});
+    const optionsError = validateRentalOptions(normalized);
+    if (optionsError) {
+      return res.status(400).json({ error: optionsError });
+    }
+
+    const pricing = calculateRentalPrice(car.price_per_day, rawStart, rawEnd, normalized);
+
     const overlappingRentals = await Rental.find({
       car_id,
+      status: { $ne: 'cancelled' },
       $or: [
         {
           start_date: { $lte: end },
@@ -485,7 +589,10 @@ app.post('/api/rentals', auth, async (req, res) => {
       car_id,
       start_date: start,
       end_date: end,
-      total_price: Number(total_price)
+      base_rental_price: pricing.basePrice,
+      options: buildOptionsSnapshot(normalized, pricing),
+      status: 'active',
+      total_price: pricing.totalPrice
     });
 
     const populatedRental = await Rental.findById(rental._id)
@@ -501,16 +608,78 @@ app.post('/api/rentals', auth, async (req, res) => {
 // Get rentals
 app.get('/api/rentals', auth, async (req, res) => {
   try {
-    const rentals = await Rental.find()
+    const { search = '', dateFrom, dateTo, status } = req.query;
+    const query = {};
+    const conditions = [];
+    const now = new Date();
+
+    if (req.user.role !== 'admin') {
+      query.client_id = req.user.id;
+    }
+
+    if (status === 'cancelled') {
+      query.status = status;
+    } else if (status === 'future') {
+      query.status = { $ne: 'cancelled' };
+      conditions.push({ start_date: { $gt: now } });
+    } else if (status === 'completed') {
+      query.status = { $ne: 'cancelled' };
+      conditions.push({ end_date: { $lt: now } });
+    } else if (status === 'current' || status === 'active') {
+      query.status = { $ne: 'cancelled' };
+      conditions.push({ start_date: { $lte: now } });
+      conditions.push({ end_date: { $gte: now } });
+    }
+
+    if (dateFrom || dateTo) {
+      if (dateFrom) {
+        const from = applyRentalStartTime(new Date(dateFrom));
+        if (isNaN(from.getTime())) {
+          return res.status(400).json({ error: 'Неправильний формат дати початку' });
+        }
+        conditions.push({ end_date: { $gte: from } });
+      }
+      if (dateTo) {
+        const to = applyRentalEndTime(new Date(dateTo));
+        if (isNaN(to.getTime())) {
+          return res.status(400).json({ error: 'Неправильний формат дати завершення' });
+        }
+        conditions.push({ start_date: { $lte: to } });
+      }
+    }
+
+    if (conditions.length > 0) {
+      query.$and = conditions;
+    }
+
+    let rentals = await Rental.find(query)
       .populate({
         path: 'car_id',
         select: 'name price_per_day'
       })
       .populate({
         path: 'client_id',
-        select: 'email first_name last_name'
+        select: 'email first_name last_name middle_name phone_number'
       })
       .sort({ created_at: -1 });
+
+    if (search.trim()) {
+      const term = search.trim().toLowerCase();
+      rentals = rentals.filter((rental) => {
+        const client = rental.client_id;
+        const car = rental.car_id;
+        return [
+          car?.name,
+          client?.email,
+          client?.first_name,
+          client?.last_name,
+          client?.middle_name,
+          client?.phone_number,
+        ]
+          .filter(Boolean)
+          .some((value) => value.toLowerCase().includes(term));
+      });
+    }
     
     res.json(rentals);
   } catch (error) {
@@ -521,19 +690,86 @@ app.get('/api/rentals', auth, async (req, res) => {
 // Update rental
 app.put('/api/rentals/:id', auth, async (req, res) => {
   try {
-    const rental = await Rental.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    )
-    .populate('car_id')
-    .populate('client_id');
+    const rental = await Rental.findById(req.params.id).populate('car_id');
 
     if (!rental) {
       return res.status(404).json({ error: 'Оренду не знайдено' });
     }
 
-    res.json(rental);
+    const isOwner = rental.client_id.toString() === req.user.id;
+    const isUserAdmin = req.user.role === 'admin';
+
+    if (!isUserAdmin && !isOwner) {
+      return res.status(403).json({ error: 'Доступ заборонено' });
+    }
+
+    if (!isUserAdmin) {
+      if (rental.status === 'cancelled') {
+        return res.status(400).json({ error: 'Скасоване бронювання не можна редагувати' });
+      }
+      if (!canModifyBeforeRental(rental.start_date)) {
+        return res.status(400).json({ error: 'Редагування доступне тільки за 2 дні до початку оренди' });
+      }
+    }
+
+    const rawStart = req.body.start_date ? new Date(req.body.start_date) : new Date(rental.start_date);
+    const rawEnd = req.body.end_date ? new Date(req.body.end_date) : new Date(rental.end_date);
+
+    if (isNaN(rawStart.getTime()) || isNaN(rawEnd.getTime()) || rawStart > rawEnd) {
+      return res.status(400).json({ error: 'Неправильний діапазон дат' });
+    }
+
+    const nextStatus = isUserAdmin && req.body.status ? req.body.status : rental.status || 'active';
+    if (!['active', 'cancelled'].includes(nextStatus)) {
+      return res.status(400).json({ error: 'Неправильний статус бронювання' });
+    }
+
+    const { start, end } = applyRentalTimes(rawStart, rawEnd);
+    const normalized = normalizeOptions(req.body.options || rental.options || {});
+    const optionsError = validateRentalOptions(normalized);
+    if (optionsError) {
+      return res.status(400).json({ error: optionsError });
+    }
+
+    const car = rental.car_id;
+    if (!car) {
+      return res.status(404).json({ error: 'Автомобіль не знайдено' });
+    }
+
+    if (nextStatus !== 'cancelled') {
+      const overlappingRentals = await Rental.find({
+        _id: { $ne: rental._id },
+        car_id: car._id,
+        status: { $ne: 'cancelled' },
+        $or: [
+          {
+            start_date: { $lte: end },
+            end_date: { $gte: start }
+          }
+        ]
+      });
+
+      if (overlappingRentals.length > 0) {
+        return res.status(400).json({ error: 'Автомобіль недоступний на ці дати' });
+      }
+    }
+
+    const pricing = calculateRentalPrice(car.price_per_day, rawStart, rawEnd, normalized);
+
+    rental.start_date = start;
+    rental.end_date = end;
+    rental.base_rental_price = pricing.basePrice;
+    rental.options = buildOptionsSnapshot(normalized, pricing);
+    rental.status = nextStatus;
+    rental.total_price = pricing.totalPrice;
+
+    await rental.save();
+
+    const populatedRental = await Rental.findById(rental._id)
+      .populate('car_id')
+      .populate('client_id');
+
+    res.json(populatedRental);
   } catch (error) {
     console.error('Error updating rental:', error);
     res.status(500).json({ error: 'Failed to update rental' });
@@ -543,23 +779,173 @@ app.put('/api/rentals/:id', auth, async (req, res) => {
 // Delete rental
 app.delete('/api/rentals/:id', auth, async (req, res) => {
   try {
-    const rental = await Rental.findByIdAndDelete(req.params.id);
+    const rental = await Rental.findById(req.params.id);
     
     if (!rental) {
       return res.status(404).json({ error: 'Оренду не знайдено' });
     }
 
-    res.json({ message: 'Оренду успішно видалено' });
+    if (req.user.role === 'admin') {
+      await Rental.findByIdAndDelete(req.params.id);
+      return res.json({ message: 'Бронювання успішно видалено' });
+    }
+
+    if (rental.client_id.toString() !== req.user.id) {
+      return res.status(403).json({ error: 'Доступ заборонено' });
+    }
+
+    if (rental.status === 'cancelled') {
+      return res.status(400).json({ error: 'Бронювання вже скасовано' });
+    }
+
+    if (!canModifyBeforeRental(rental.start_date)) {
+      return res.status(400).json({ error: 'Скасування доступне тільки за 2 дні до початку оренди' });
+    }
+
+    rental.status = 'cancelled';
+    await rental.save();
+
+    res.json({ message: 'Бронювання успішно скасовано' });
   } catch (error) {
     console.error('Помилка видалення оренди:', error);
     res.status(500).json({ error: 'Не вдалося видалити оренду' });
   }
 });
 
+// Admin statistics
+app.get('/api/admin/statistics', [auth, isAdmin], async (req, res) => {
+  try {
+    const now = new Date();
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const [rentals, usersCount, carsCount, availableStatuses] = await Promise.all([
+      Rental.find({ status: { $ne: 'cancelled' } })
+        .populate({ path: 'car_id', select: 'name price_per_day' })
+        .populate({ path: 'client_id', select: 'email first_name last_name' })
+        .sort({ created_at: -1 }),
+      User.countDocuments(),
+      Car.countDocuments(),
+      Status.find({ status: true }),
+    ]);
+
+    const availableCars = await Car.countDocuments({
+      status: { $in: availableStatuses.map((s) => s._id) },
+    });
+
+    const totalRevenue = rentals.reduce((sum, r) => sum + (Number(r.total_price) || 0), 0);
+    const monthRentals = rentals.filter((r) => new Date(r.created_at) >= monthStart);
+    const monthRevenue = monthRentals.reduce((sum, r) => sum + (Number(r.total_price) || 0), 0);
+    const activeRentals = rentals.filter(
+      (r) => now >= new Date(r.start_date) && now <= new Date(r.end_date)
+    ).length;
+    const avgOrderValue = rentals.length ? Math.round(totalRevenue / rentals.length) : 0;
+
+    const carStats = {};
+    rentals.forEach((rental) => {
+      const car = rental.car_id;
+      if (!car) return;
+      const id = car._id.toString();
+      if (!carStats[id]) {
+        carStats[id] = { id, name: car.name, count: 0, revenue: 0 };
+      }
+      carStats[id].count += 1;
+      carStats[id].revenue += Number(rental.total_price) || 0;
+    });
+
+    const topCars = Object.values(carStats)
+      .sort((a, b) => b.count - a.count || b.revenue - a.revenue)
+      .slice(0, 5);
+
+    const optionsUsage = {
+      delivery: 0,
+      return_elsewhere: 0,
+      child_seat: 0,
+      bike_rack: 0,
+      full_insurance: 0,
+    };
+
+    rentals.forEach((rental) => {
+      const opts = rental.options || {};
+      if (opts.delivery?.enabled) optionsUsage.delivery += 1;
+      if (opts.return_elsewhere?.enabled) optionsUsage.return_elsewhere += 1;
+      if (opts.child_seat?.enabled) optionsUsage.child_seat += 1;
+      if (opts.bike_rack?.enabled) optionsUsage.bike_rack += 1;
+      if (opts.full_insurance?.enabled) optionsUsage.full_insurance += 1;
+    });
+
+    const monthlyRevenue = [];
+    for (let i = 5; i >= 0; i -= 1) {
+      const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      const label = date.toLocaleDateString('uk-UA', { month: 'short', year: '2-digit' });
+      const revenue = rentals
+        .filter((r) => {
+          const created = new Date(r.created_at);
+          return created >= date && created < nextMonth;
+        })
+        .reduce((sum, r) => sum + (Number(r.total_price) || 0), 0);
+      const count = rentals.filter((r) => {
+        const created = new Date(r.created_at);
+        return created >= date && created < nextMonth;
+      }).length;
+      monthlyRevenue.push({ label, revenue, count });
+    }
+
+    const recentRentals = rentals.slice(0, 8).map((rental) => ({
+      id: rental._id,
+      carName: rental.car_id?.name || '—',
+      clientEmail: rental.client_id?.email || '—',
+      totalPrice: rental.total_price,
+      startDate: rental.start_date,
+      endDate: rental.end_date,
+      createdAt: rental.created_at,
+    }));
+
+    res.json({
+      overview: {
+        totalRentals: rentals.length,
+        totalRevenue,
+        monthRevenue,
+        monthRentals: monthRentals.length,
+        activeRentals,
+        usersCount,
+        carsCount,
+        availableCars,
+        avgOrderValue,
+      },
+      topCars,
+      optionsUsage,
+      monthlyRevenue,
+      recentRentals,
+    });
+  } catch (error) {
+    console.error('Error fetching admin statistics:', error);
+    res.status(500).json({ error: 'Failed to fetch statistics' });
+  }
+});
+
 // Users endpoints
 app.get('/api/users', [auth, isAdmin], async (req, res) => {
   try {
-    const users = await User.find().select('-password');
+    const { search = '', role } = req.query;
+    const query = {};
+
+    if (role) {
+      query.role = role;
+    }
+
+    if (search.trim()) {
+      const regex = new RegExp(search.trim(), 'i');
+      query.$or = [
+        { email: regex },
+        { phone_number: regex },
+        { first_name: regex },
+        { last_name: regex },
+        { middle_name: regex },
+      ];
+    }
+
+    const users = await User.find(query).select('-password').sort({ created_at: -1 });
     res.json(users);
   } catch (error) {
     console.error('Error fetching users:', error);

@@ -5,6 +5,7 @@ import Signup from './components/Signup.jsx';
 import MainApp from './components/MainApp.jsx';
 import UsersPage from './components/UsersPage.jsx';
 import RentalsPage from './components/RentalsPage.jsx';
+import AdminStatsPage from './components/AdminStatsPage.jsx';
 import UserRentalsPage from './components/UserRentalsPage.jsx';
 import SupportPage from './components/SupportPage.jsx';
 import Header from './components/Header.jsx';
@@ -67,6 +68,11 @@ function AppContent() {
         <Route path="/rentals" element={
           <PrivateRoute adminOnly={true}>
             <RentalsPage />
+          </PrivateRoute>
+        } />
+        <Route path="/admin/stats" element={
+          <PrivateRoute adminOnly={true}>
+            <AdminStatsPage />
           </PrivateRoute>
         } />
       </Routes>

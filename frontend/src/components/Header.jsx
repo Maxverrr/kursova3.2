@@ -60,7 +60,10 @@ const Header = () => {
                 Користувачі
               </Link>
               <Link to="/rentals" className={navLinkClass('/rentals')}>
-                Замовлення
+                Бронювання
+              </Link>
+              <Link to="/admin/stats" className={navLinkClass('/admin/stats')}>
+                Статистика
               </Link>
             </>
           )}

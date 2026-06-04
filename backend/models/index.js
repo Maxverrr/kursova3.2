@@ -32,12 +32,38 @@ const statusSchema = new mongoose.Schema({
   status: { type: Boolean, required: true, unique: true }
 });
 
+const rentalOptionItemSchema = new mongoose.Schema(
+  {
+    enabled: { type: Boolean, default: false },
+    km: { type: Number, default: 0 },
+    price: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
+const rentalFlatOptionSchema = new mongoose.Schema(
+  {
+    enabled: { type: Boolean, default: false },
+    price: { type: Number, default: 0 },
+  },
+  { _id: false }
+);
+
 // Rental Schema
 const rentalSchema = new mongoose.Schema({
   client_id: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   car_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Car', required: true },
   start_date: { type: Date, required: true },
   end_date: { type: Date, required: true },
+  base_rental_price: { type: Number, default: 0 },
+  options: {
+    delivery: { type: rentalOptionItemSchema, default: () => ({}) },
+    return_elsewhere: { type: rentalOptionItemSchema, default: () => ({}) },
+    child_seat: { type: rentalFlatOptionSchema, default: () => ({}) },
+    bike_rack: { type: rentalFlatOptionSchema, default: () => ({}) },
+    full_insurance: { type: rentalFlatOptionSchema, default: () => ({}) },
+  },
+  status: { type: String, enum: ['active', 'cancelled'], default: 'active' },
   total_price: { type: Number, required: true },
   created_at: { type: Date, default: Date.now }
 });
