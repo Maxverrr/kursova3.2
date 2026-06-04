@@ -286,7 +286,7 @@ const CarList = () => {
                 {cars.map(car => {
                     const specLabels = getCarSpecLabels(car);
                     return (
-                    <div key={car._id} className="relative w-full aspect-[16/11.5] rounded-xl glass-card-frame overflow-hidden group sm:aspect-[16/9.924]">
+                    <div key={car._id} className="relative w-full aspect-[16/10.2] rounded-xl glass-card-frame overflow-hidden group sm:aspect-[16/9.924]">
                         <div className="car-showroom-bg absolute inset-0" />
                         <img
                             src={withImageKitBackgroundRemoval(car.photo) || '/placeholder-car.jpg'}
@@ -304,7 +304,7 @@ const CarList = () => {
                         </div>
 
                         {/* Тінь справа */}
-                        <div className="absolute top-0 right-0 z-[2] h-full bg-black/50 w-[23.2%]" />
+                        <div className="absolute top-0 right-0 z-[2] h-full w-[24%] bg-black/55 sm:w-[23.2%] sm:bg-black/50" />
                         
                         {/* Тінь зверху */}
                         <div className="absolute top-0 left-0 right-0 z-[2] h-[17.5%] bg-black/50" />
@@ -316,12 +316,12 @@ const CarList = () => {
                                     <img 
                                         src={`/img/brands/${car.name.split(' ')[0].toLowerCase()}.png`} 
                                         alt={`${car.name.split(' ')[0]} logo`}
-                                        className="h-6 w-auto sm:h-[min(2.5vw,1.9rem)]"
+                                        className="h-5 w-auto sm:h-[min(2.5vw,1.9rem)]"
                                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                     />
-                                    <h3 className="text-[clamp(1.05rem,5vw,1.9rem)] font-bold leading-tight text-white sm:text-[min(2.2vw,1.9rem)]">{car.name}</h3>
+                                    <h3 className="max-w-[11rem] truncate text-[clamp(0.95rem,4.4vw,1.35rem)] font-bold leading-tight text-white sm:max-w-none sm:text-[min(2.2vw,1.9rem)]">{car.name}</h3>
                                 </div>
-                                <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs sm:px-[2.5%] sm:py-[0.7%] sm:text-[min(1vw,0.9rem)] ${
+                                <span className={`shrink-0 rounded-full px-2 py-0.5 text-[0.65rem] sm:px-[2.5%] sm:py-[0.7%] sm:text-[min(1vw,0.9rem)] ${
                                     car.status?.status ? 'bg-green-800/80 text-green-200' : 'bg-red-800/80 text-red-200'
                                 }`}>
                                     {car.status?.status ? 'Доступний' : 'Недоступний'}
@@ -332,30 +332,30 @@ const CarList = () => {
                             <div className="flex justify-end">
                                 <div className="space-y-[0.01%]">
                                     <div className="text-right">
-                                        <p className="text-[clamp(1.25rem,6vw,2.2rem)] font-bold leading-none text-white sm:text-[min(3vw,2.2rem)]">{car.horsepower}</p>
-                                        <p className="text-[clamp(0.68rem,3vw,0.9rem)] text-white opacity-80 sm:text-[min(1vw,0.9rem)]">к.с.</p>
+                                        <p className="text-[clamp(1rem,4.8vw,1.45rem)] font-bold leading-none text-white sm:text-[min(3vw,2.2rem)]">{car.horsepower}</p>
+                                        <p className="text-[clamp(0.55rem,2.5vw,0.72rem)] leading-tight text-white opacity-80 sm:text-[min(1vw,0.9rem)]">к.с.</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[clamp(1.2rem,5.6vw,2.1rem)] leading-none text-white sm:text-[min(3vw,2.1rem)]">{formatCardCapacity(car.engine_volume, car)}</p>
-                                        <p className="text-[clamp(0.64rem,2.8vw,0.9rem)] text-white opacity-80 sm:text-[min(1vw,0.9rem)]">{specLabels.capacityLabel}</p>
+                                        <p className="text-[clamp(0.95rem,4.4vw,1.35rem)] leading-none text-white sm:text-[min(3vw,2.1rem)]">{formatCardCapacity(car.engine_volume, car)}</p>
+                                        <p className="max-w-[6.5rem] text-[clamp(0.52rem,2.2vw,0.68rem)] leading-tight text-white opacity-80 sm:max-w-none sm:text-[min(1vw,0.9rem)]">{specLabels.capacityLabel}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[clamp(1.2rem,5.6vw,2.1rem)] leading-none text-white sm:text-[min(3vw,2.1rem)]">{formatCardConsumption(car.fuel_consumption)}</p>
-                                        <p className="text-[clamp(0.64rem,2.8vw,0.9rem)] text-white opacity-80 sm:text-[min(1vw,0.9rem)]">{specLabels.consumptionLabel}</p>
+                                        <p className="text-[clamp(0.95rem,4.4vw,1.35rem)] leading-none text-white sm:text-[min(3vw,2.1rem)]">{formatCardConsumption(car.fuel_consumption)}</p>
+                                        <p className="max-w-[6.5rem] text-[clamp(0.52rem,2.2vw,0.68rem)] leading-tight text-white opacity-80 sm:max-w-none sm:text-[min(1vw,0.9rem)]">{specLabels.consumptionLabel}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[clamp(1.2rem,5.6vw,2.1rem)] font-bold leading-none text-white sm:text-[min(3vw,2.1rem)]">{car.price_per_day}₴</p>
-                                        <p className="text-[clamp(0.64rem,2.8vw,0.9rem)] text-white opacity-80 sm:text-[min(1vw,0.9rem)]">/день</p>
+                                        <p className="text-[clamp(0.95rem,4.4vw,1.35rem)] font-bold leading-none text-white sm:text-[min(3vw,2.1rem)]">{car.price_per_day}₴</p>
+                                        <p className="text-[clamp(0.52rem,2.2vw,0.68rem)] leading-tight text-white opacity-80 sm:text-[min(1vw,0.9rem)]">/день</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         {/* Анімація*/}
-                        <div className="absolute inset-x-0 bottom-0 z-[4] flex h-[24%] items-center justify-center bg-gradient-to-t from-black/90 to-black/70 transition-all duration-300 ease-out sm:h-0 sm:group-hover:h-[22%]">
+                        <div className="absolute inset-x-0 bottom-0 z-[4] flex h-[20%] items-center justify-center bg-gradient-to-t from-black/90 to-black/70 transition-all duration-300 ease-out sm:h-0 sm:group-hover:h-[22%]">
                             <Link 
                                 to={`/cars/${car._id}?returnPage=${page}`}
-                                className="rounded-full bg-blue-600 px-4 py-2 text-sm font-medium text-white opacity-100 transition-opacity duration-300 delay-150 hover:bg-blue-700 sm:px-[3%] sm:py-[1%] sm:text-[min(1.2vw,0.875rem)] sm:opacity-0 sm:group-hover:opacity-100"
+                                className="rounded-full bg-blue-600 px-3.5 py-1.5 text-xs font-medium text-white opacity-100 transition-opacity duration-300 delay-150 hover:bg-blue-700 sm:px-[3%] sm:py-[1%] sm:text-[min(1.2vw,0.875rem)] sm:opacity-0 sm:group-hover:opacity-100"
                             >       
                                 Детальніше
                             </Link>
