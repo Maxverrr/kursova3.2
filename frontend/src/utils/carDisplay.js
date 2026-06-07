@@ -12,6 +12,11 @@ const firstNumber = (value) => {
   return match ? match[0] : value;
 };
 
+const fixedOneNumber = (value) => {
+  const number = Number(firstNumber(value));
+  return Number.isFinite(number) ? number.toFixed(1) : value;
+};
+
 export const getCarSpecLabels = (carOrFuelType) => {
   const electric = isElectricCar(carOrFuelType);
 
@@ -26,7 +31,7 @@ export const getCarSpecLabels = (carOrFuelType) => {
 
 export const formatCapacity = (value, carOrFuelType) => {
   const labels = getCarSpecLabels(carOrFuelType);
-  const normalizedValue = labels.electric ? firstNumber(value) : Number(value).toFixed(1);
+  const normalizedValue = labels.electric ? firstNumber(value) : fixedOneNumber(value);
   return `${normalizedValue} ${labels.capacityUnit}`;
 };
 
@@ -41,6 +46,21 @@ export const formatCardCapacity = (value, carOrFuelType) => {
 };
 
 export const formatCardConsumption = (value) => firstNumber(value);
+
+export const getCarImageStyle = (car = {}) => {
+  const x = Number(car.image_position_x) || 0;
+  const y = Number(car.image_position_y) || 0;
+  const zoomValue = Number(car.image_zoom);
+  const zoom = Number.isFinite(zoomValue) && zoomValue > 0 ? zoomValue : 1;
+
+  return {
+    left: `calc(50% + ${x}%)`,
+    top: `calc(50% + ${y}%)`,
+    objectFit: 'contain',
+    transform: `translate(-50%, -50%) scale(${zoom})`,
+    transformOrigin: 'center center',
+  };
+};
 
 export const withImageKitBackgroundRemoval = (imageUrl) => {
   if (!imageUrl || !imageUrl.includes('ik.imagekit.io') || imageUrl.includes('tr:e-bgremove')) {

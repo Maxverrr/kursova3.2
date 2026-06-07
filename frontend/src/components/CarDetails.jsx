@@ -14,6 +14,7 @@ import {
 import {
     formatCapacity,
     formatConsumption,
+    getCarImageStyle,
     getCarSpecLabels,
     withImageKitBackgroundRemoval,
 } from '../utils/carDisplay';
@@ -310,7 +311,8 @@ const CarDetails = () => {
                         <img 
                             src={withImageKitBackgroundRemoval(car.photo) || '/placeholder-car.jpg'} 
                             alt={car.name}
-                            className="relative z-[1] h-full w-full object-cover drop-shadow-[0_34px_45px_rgba(0,0,0,0.6)]"
+                            style={getCarImageStyle(car)}
+                            className="absolute z-[1] h-full w-full object-cover drop-shadow-[0_34px_45px_rgba(0,0,0,0.6)]"
                         />
                         <div className="absolute inset-0 z-[2] bg-gradient-to-t from-black/75 via-transparent to-black/20" />
                         <h1 className="absolute bottom-5 left-4 right-4 z-[3] text-2xl font-bold leading-tight text-white sm:bottom-6 sm:left-6 sm:text-4xl">{car.name}</h1>

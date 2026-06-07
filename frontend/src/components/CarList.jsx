@@ -7,9 +7,20 @@ import FilterForm from './FilterForm';
 import {
     formatCardCapacity,
     formatCardConsumption,
+    getCarImageStyle,
     getCarSpecLabels,
     withImageKitBackgroundRemoval,
 } from '../utils/carDisplay';
+
+const formatCardEngineVolume = (value, car) => {
+    const labels = getCarSpecLabels(car);
+    if (labels.electric) return formatCardCapacity(value, car);
+
+    const match = String(value ?? '').replace(',', '.').match(/\d+(\.\d+)?/);
+    const number = Number(match?.[0]);
+    return Number.isFinite(number) ? number.toFixed(1) : formatCardCapacity(value, car);
+};
+
 const CarList = () => {
     const [searchParams, setSearchParams] = useSearchParams();
     const [cars, setCars] = useState([]);
@@ -286,12 +297,15 @@ const CarList = () => {
                 {cars.map(car => {
                     const specLabels = getCarSpecLabels(car);
                     return (
-                    <div key={car._id} className="relative w-full aspect-[16/10.2] rounded-xl glass-card-frame overflow-hidden group sm:aspect-[16/9.924]">
+                    <div key={car._id} className="relative w-full aspect-[16/11.5] rounded-xl glass-card-frame overflow-hidden group sm:aspect-[16/9.924]">
                         <div className="car-showroom-bg absolute inset-0" />
                         <img
                             src={withImageKitBackgroundRemoval(car.photo) || '/placeholder-car.jpg'}
                             alt={car.name}
-                            className="absolute inset-0 z-[1] h-full w-full object-cover drop-shadow-[0_24px_30px_rgba(0,0,0,0.55)] transition duration-300 group-hover:scale-[1.03]"
+                            style={getCarImageStyle(car)}
+                            loading="lazy"
+                            decoding="async"
+                            className="absolute z-[1] h-full w-full object-cover"
                         />
 
                         {/* Індикатор класу */}
@@ -299,7 +313,9 @@ const CarList = () => {
                             <img 
                                 src={`/img/class_${car.class?.class_name.toLowerCase()}.png`}
                                 alt={car.class?.class_name}
-                                className="h-full w-full object-cover"
+                                loading="lazy"
+                                decoding="async"
+                                className="h-full w-full object-fill sm:object-cover"
                             />
                         </div>
 
@@ -316,6 +332,8 @@ const CarList = () => {
                                     <img 
                                         src={`/img/brands/${car.name.split(' ')[0].toLowerCase()}.png`} 
                                         alt={`${car.name.split(' ')[0]} logo`}
+                                        loading="lazy"
+                                        decoding="async"
                                         className="h-5 w-auto sm:h-[min(2.5vw,1.9rem)]"
                                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                                     />
@@ -330,22 +348,22 @@ const CarList = () => {
 
                             {/* Характеристики авто */}
                             <div className="flex justify-end">
-                                <div className="space-y-[0.01%]">
+                                <div className="space-y-2 sm:space-y-[2.4%]">
                                     <div className="text-right">
-                                        <p className="text-[clamp(1rem,4.8vw,1.45rem)] font-bold leading-none text-white sm:text-[min(3vw,2.2rem)]">{car.horsepower}</p>
-                                        <p className="text-[clamp(0.55rem,2.5vw,0.72rem)] leading-tight text-white opacity-80 sm:text-[min(1vw,0.9rem)]">к.с.</p>
+                                        <p className="text-[clamp(1.25rem,6vw,2.2rem)] font-bold leading-none text-white sm:text-[min(3vw,2.2rem)]">{car.horsepower}</p>
+                                        <p className="text-[clamp(0.68rem,3vw,0.9rem)] text-white opacity-80 sm:text-[min(1vw,0.9rem)]">к.с.</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[clamp(0.95rem,4.4vw,1.35rem)] leading-none text-white sm:text-[min(3vw,2.1rem)]">{formatCardCapacity(car.engine_volume, car)}</p>
-                                        <p className="max-w-[6.5rem] text-[clamp(0.52rem,2.2vw,0.68rem)] leading-tight text-white opacity-80 sm:max-w-none sm:text-[min(1vw,0.9rem)]">{specLabels.capacityLabel}</p>
+                                        <p className="text-[clamp(1.2rem,5.6vw,2.1rem)] leading-none text-white sm:text-[min(3vw,2.1rem)]">{formatCardEngineVolume(car.engine_volume, car)}</p>
+                                        <p className="text-[clamp(0.64rem,2.8vw,0.9rem)] text-white opacity-80 sm:text-[min(1vw,0.9rem)]">{specLabels.capacityLabel}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[clamp(0.95rem,4.4vw,1.35rem)] leading-none text-white sm:text-[min(3vw,2.1rem)]">{formatCardConsumption(car.fuel_consumption)}</p>
-                                        <p className="max-w-[6.5rem] text-[clamp(0.52rem,2.2vw,0.68rem)] leading-tight text-white opacity-80 sm:max-w-none sm:text-[min(1vw,0.9rem)]">{specLabels.consumptionLabel}</p>
+                                        <p className="text-[clamp(1.2rem,5.6vw,2.1rem)] leading-none text-white sm:text-[min(3vw,2.1rem)]">{formatCardConsumption(car.fuel_consumption)}</p>
+                                        <p className="text-[clamp(0.64rem,2.8vw,0.9rem)] text-white opacity-80 sm:text-[min(1vw,0.9rem)]">{specLabels.consumptionLabel}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-[clamp(0.95rem,4.4vw,1.35rem)] font-bold leading-none text-white sm:text-[min(3vw,2.1rem)]">{car.price_per_day}₴</p>
-                                        <p className="text-[clamp(0.52rem,2.2vw,0.68rem)] leading-tight text-white opacity-80 sm:text-[min(1vw,0.9rem)]">/день</p>
+                                        <p className="text-[clamp(1.2rem,5.6vw,2.1rem)] font-bold leading-none text-white sm:text-[min(3vw,2.1rem)]">{car.price_per_day}₴</p>
+                                        <p className="text-[clamp(0.64rem,2.8vw,0.9rem)] text-white opacity-80 sm:text-[min(1vw,0.9rem)]">/день</p>
                                     </div>
                                 </div>
                             </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import ApiService from '../services/api';
-import { getCarSpecLabels } from '../utils/carDisplay';
+import { getCarImageStyle, getCarSpecLabels, withImageKitBackgroundRemoval } from '../utils/carDisplay';
 
 const CarForm = ({ onSubmit, initialData = null }) => {
     const [formData, setFormData] = useState({
@@ -14,7 +14,10 @@ const CarForm = ({ onSubmit, initialData = null }) => {
         color: '',
         price_per_day: '',
         status_id: '',
-        photo: ''
+        photo: '',
+        image_position_x: 0,
+        image_position_y: 0,
+        image_zoom: 1
     });
     const [referenceData, setReferenceData] = useState({
         bodyTypes: [],
@@ -37,7 +40,10 @@ const CarForm = ({ onSubmit, initialData = null }) => {
                 body_type_id: initialData.body_type_id || initialData.body_type?._id || '',
                 class_id: initialData.class_id || initialData.class?._id || '',
                 fuel_type_id: initialData.fuel_type_id || initialData.fuel_type?._id || '',
-                status_id: initialData.status_id || initialData.status?._id || ''
+                status_id: initialData.status_id || initialData.status?._id || '',
+                image_position_x: initialData.image_position_x ?? 0,
+                image_position_y: initialData.image_position_y ?? 0,
+                image_zoom: initialData.image_zoom ?? 1
             });
         }
     }, [initialData]);
@@ -66,6 +72,15 @@ const CarForm = ({ onSubmit, initialData = null }) => {
         }));
     };
 
+    const resetImagePosition = () => {
+        setFormData(prev => ({
+            ...prev,
+            image_position_x: 0,
+            image_position_y: 0,
+            image_zoom: 1
+        }));
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -78,7 +93,10 @@ const CarForm = ({ onSubmit, initialData = null }) => {
                 engine_volume: parseFloat(formData.engine_volume),
                 horsepower: parseInt(formData.horsepower),
                 price_per_day: parseFloat(formData.price_per_day),
-                fuel_consumption: formData.fuel_consumption.toString()
+                fuel_consumption: formData.fuel_consumption.toString(),
+                image_position_x: parseFloat(formData.image_position_x) || 0,
+                image_position_y: parseFloat(formData.image_position_y) || 0,
+                image_zoom: parseFloat(formData.image_zoom) || 1
             };
 
             await onSubmit(submitData);
@@ -95,7 +113,10 @@ const CarForm = ({ onSubmit, initialData = null }) => {
                     color: '',
                     price_per_day: '',
                     status_id: '',
-                    photo: ''
+                    photo: '',
+                    image_position_x: 0,
+                    image_position_y: 0,
+                    image_zoom: 1
                 });
             }
         } catch (err) {
@@ -134,6 +155,121 @@ const CarForm = ({ onSubmit, initialData = null }) => {
                         placeholder="https://example.com/car-photo.jpg"
                         className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
                     />
+                </div>
+
+                <div className="md:col-span-2">
+                    <div className="rounded-lg border border-white/15 bg-slate-950 p-4 shadow-inner">
+                        <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                            <div>
+                                <h3 className="text-base font-semibold text-white">Позиція фото на карточці</h3>
+                                <p className="text-sm text-slate-300">Рухай фото повзунками і збережи авто.</p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={resetImagePosition}
+                                className="rounded-md border border-white/20 px-3 py-1.5 text-sm text-white transition hover:bg-white/10"
+                            >
+                                Скинути
+                            </button>
+                        </div>
+
+                        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.25fr)_minmax(18rem,1fr)]">
+                            <div className="car-showroom-bg relative aspect-[16/9.5] overflow-hidden rounded-lg border border-white/10">
+                                {formData.photo ? (
+                                    <img
+                                        src={withImageKitBackgroundRemoval(formData.photo)}
+                                        alt="Прев'ю авто"
+                                        style={getCarImageStyle(formData)}
+                                        className="absolute h-full w-full object-cover drop-shadow-[0_24px_32px_rgba(0,0,0,0.55)]"
+                                    />
+                                ) : (
+                                    <div className="flex h-full items-center justify-center px-4 text-center text-sm text-slate-400">
+                                        Встав URL фото, щоб побачити прев'ю.
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-4 rounded-lg bg-white/5 p-4">
+                                <label className="block">
+                                    <div className="mb-2 flex items-center justify-between gap-3 text-sm text-white">
+                                        <span>Лівіше / правіше</span>
+                                        <input
+                                            type="number"
+                                            name="image_position_x"
+                                            value={formData.image_position_x}
+                                            onChange={handleChange}
+                                            min="-120"
+                                            max="120"
+                                            step="1"
+                                            className="w-20 rounded border-white/20 bg-slate-900 px-2 py-1 text-right text-white"
+                                        />
+                                    </div>
+                                    <input
+                                        type="range"
+                                        name="image_position_x"
+                                        value={formData.image_position_x}
+                                        onChange={handleChange}
+                                        min="-120"
+                                        max="120"
+                                        step="1"
+                                        className="w-full accent-blue-500"
+                                    />
+                                </label>
+
+                                <label className="block">
+                                    <div className="mb-2 flex items-center justify-between gap-3 text-sm text-white">
+                                        <span>Вище / нижче</span>
+                                        <input
+                                            type="number"
+                                            name="image_position_y"
+                                            value={formData.image_position_y}
+                                            onChange={handleChange}
+                                            min="-120"
+                                            max="120"
+                                            step="1"
+                                            className="w-20 rounded border-white/20 bg-slate-900 px-2 py-1 text-right text-white"
+                                        />
+                                    </div>
+                                    <input
+                                        type="range"
+                                        name="image_position_y"
+                                        value={formData.image_position_y}
+                                        onChange={handleChange}
+                                        min="-120"
+                                        max="120"
+                                        step="1"
+                                        className="w-full accent-blue-500"
+                                    />
+                                </label>
+
+                                <label className="block">
+                                    <div className="mb-2 flex items-center justify-between gap-3 text-sm text-white">
+                                        <span>Масштаб</span>
+                                        <input
+                                            type="number"
+                                            name="image_zoom"
+                                            value={formData.image_zoom}
+                                            onChange={handleChange}
+                                            min="0.4"
+                                            max="2.5"
+                                            step="0.01"
+                                            className="w-20 rounded border-white/20 bg-slate-900 px-2 py-1 text-right text-white"
+                                        />
+                                    </div>
+                                    <input
+                                        type="range"
+                                        name="image_zoom"
+                                        value={formData.image_zoom}
+                                        onChange={handleChange}
+                                        min="0.4"
+                                        max="2.5"
+                                        step="0.01"
+                                        className="w-full accent-blue-500"
+                                    />
+                                </label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div>

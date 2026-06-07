@@ -90,6 +90,9 @@ const carSchema = new mongoose.Schema({
   price_per_day: { type: Number, required: true },
   status: { type: mongoose.Schema.Types.ObjectId, ref: 'Status', default: null },
   photo: { type: String },
+  image_position_x: { type: Number, default: 0 },
+  image_position_y: { type: Number, default: 0 },
+  image_zoom: { type: Number, default: 1 },
   last_modified: { type: Date, default: Date.now }
 });
 

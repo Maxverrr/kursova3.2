@@ -65,6 +65,11 @@ const isAdmin = (req, res, next) => {
 const canModifyBeforeRental = (startDate) =>
   new Date(startDate).getTime() - Date.now() >= RENTAL_EDIT_DEADLINE_MS;
 
+const toFiniteNumber = (value, fallback) => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+};
+
 const buildOptionsSnapshot = (normalized, pricing) => ({
   delivery: {
     enabled: normalized.delivery,
@@ -291,7 +296,10 @@ app.post('/api/cars', [auth, isAdmin], async (req, res) => {
       color,
       price_per_day,
       status_id,
-      photo
+      photo,
+      image_position_x,
+      image_position_y,
+      image_zoom
     } = req.body;
 
     // Upload image to ImageKit
@@ -315,7 +323,10 @@ app.post('/api/cars', [auth, isAdmin], async (req, res) => {
       color,
       price_per_day,
       status: status_id,
-      photo: imagekitUrl
+      photo: imagekitUrl,
+      image_position_x: toFiniteNumber(image_position_x, 0),
+      image_position_y: toFiniteNumber(image_position_y, 0),
+      image_zoom: toFiniteNumber(image_zoom, 1)
     });
 
     const populatedCar = await Car.findById(car._id)
@@ -345,7 +356,10 @@ app.put('/api/cars/:id', [auth, isAdmin], async (req, res) => {
       color,
       price_per_day,
       status_id,
-      photo
+      photo,
+      image_position_x,
+      image_position_y,
+      image_zoom
     } = req.body;
 
     // Upload image to ImageKit if photo URL has changed
@@ -375,6 +389,9 @@ app.put('/api/cars/:id', [auth, isAdmin], async (req, res) => {
         price_per_day,
         status: status_id,
         photo: imagekitUrl,
+        image_position_x: toFiniteNumber(image_position_x, 0),
+        image_position_y: toFiniteNumber(image_position_y, 0),
+        image_zoom: toFiniteNumber(image_zoom, 1),
         last_modified: Date.now()
       },
       { new: true }
