@@ -73,6 +73,7 @@ const CarList = () => {
             bodyType: 'Тип кузова',
             class: 'Клас',
             fuelType: 'Тип палива',
+            brand: 'Марка',
             color: 'Колір',
             available: 'Доступність'
         }[key];

@@ -147,6 +147,28 @@ app.get('/api/statuses', async (req, res) => {
 });
 
 // Public cars endpoints
+app.get('/api/car-brands', async (req, res) => {
+  try {
+    const carNames = await Car.distinct('name');
+    const brandsByNormalizedName = new Map();
+
+    carNames.forEach((name) => {
+      const brand = String(name || '').trim().split(/\s+/)[0];
+      if (brand) {
+        brandsByNormalizedName.set(brand.toLocaleLowerCase('uk'), brand);
+      }
+    });
+
+    const brands = [...brandsByNormalizedName.values()]
+      .sort((a, b) => a.localeCompare(b, 'uk', { sensitivity: 'base' }));
+
+    res.json(brands);
+  } catch (error) {
+    console.error('Error fetching car brands:', error);
+    res.status(500).json({ error: 'Failed to fetch car brands' });
+  }
+});
+
 app.get('/api/cars', async (req, res) => {
   try {
     let {
@@ -164,6 +186,7 @@ app.get('/api/cars', async (req, res) => {
       bodyType,
       class: carClass,
       fuelType,
+      brand,
       color,
       available
     } = req.query;
@@ -179,9 +202,22 @@ app.get('/api/cars', async (req, res) => {
     sortOptions[sortBy] = order.toLowerCase() === 'desc' ? -1 : 1;
 
     // Build filter query
-    const query = {
-      name: { $regex: filter, $options: 'i' }
-    };
+    const query = {};
+    const escapeRegex = (value) => String(value).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+    if (filter) {
+      query.name = { $regex: escapeRegex(filter), $options: 'i' };
+    }
+
+    if (brand) {
+      const brandQuery = { name: { $regex: `^${escapeRegex(brand)}(?:\\s|$)`, $options: 'i' } };
+      if (query.name) {
+        query.$and = [{ name: query.name }, brandQuery];
+        delete query.name;
+      } else {
+        Object.assign(query, brandQuery);
+      }
+    }
 
     // Add price range filter
     if (minPrice || maxPrice) {

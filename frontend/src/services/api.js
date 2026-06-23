@@ -102,6 +102,10 @@ class ApiService {
         return this.request(`/cars${queryString ? `?${queryString}` : ''}`);
     }
 
+    static async getCarBrands() {
+        return this.request('/car-brands');
+    }
+
     static async getCar(id) {
         return this.request(`/cars/${id}`);
     }

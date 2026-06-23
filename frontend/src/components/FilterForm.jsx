@@ -1,12 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import { FiCheck, FiChevronDown } from 'react-icons/fi';
 import ApiService from '../services/api';
 import { getCarSpecLabels } from '../utils/carDisplay';
+
+const getBrandLogoPath = (brand) => (
+    `/img/brands/${brand.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.png`
+);
 
 const FilterForm = ({ onApplyFilters, onClose, initialFilters = {} }) => {
     const [referenceData, setReferenceData] = useState({
         bodyTypes: [],
         classes: [],
         fuelTypes: [],
+        brands: [],
     });
     const [filters, setFilters] = useState({
         minPrice: initialFilters.minPrice || '',
@@ -18,9 +24,12 @@ const FilterForm = ({ onApplyFilters, onClose, initialFilters = {} }) => {
         bodyType: initialFilters.bodyType || '',
         class: initialFilters.class || '',
         fuelType: initialFilters.fuelType || '',
+        brand: initialFilters.brand || '',
         color: initialFilters.color || '',
         available: initialFilters.available || ''
     });
+    const [isBrandMenuOpen, setIsBrandMenuOpen] = useState(false);
+    const brandMenuRef = useRef(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -28,12 +37,13 @@ const FilterForm = ({ onApplyFilters, onClose, initialFilters = {} }) => {
         const fetchReferenceData = async () => {
             try {
                 setLoading(true);
-                const [bodyTypes, classes, fuelTypes] = await Promise.all([
+                const [bodyTypes, classes, fuelTypes, brands] = await Promise.all([
                     ApiService.request('/body-types'),
                     ApiService.request('/classes'),
-                    ApiService.request('/fuel-types')
+                    ApiService.request('/fuel-types'),
+                    ApiService.getCarBrands()
                 ]);
-                setReferenceData({ bodyTypes, classes, fuelTypes });
+                setReferenceData({ bodyTypes, classes, fuelTypes, brands });
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -42,6 +52,17 @@ const FilterForm = ({ onApplyFilters, onClose, initialFilters = {} }) => {
         };
 
         fetchReferenceData();
+    }, []);
+
+    useEffect(() => {
+        const handlePointerDown = (event) => {
+            if (brandMenuRef.current && !brandMenuRef.current.contains(event.target)) {
+                setIsBrandMenuOpen(false);
+            }
+        };
+
+        document.addEventListener('pointerdown', handlePointerDown);
+        return () => document.removeEventListener('pointerdown', handlePointerDown);
     }, []);
 
     useEffect(() => {
@@ -96,6 +117,7 @@ const FilterForm = ({ onApplyFilters, onClose, initialFilters = {} }) => {
             bodyType: '',
             class: '',
             fuelType: '',
+            brand: '',
             color: '',
             available: ''
         });
@@ -134,6 +156,83 @@ const FilterForm = ({ onApplyFilters, onClose, initialFilters = {} }) => {
                             className={inputClassName}
                         />
                     </div>
+                </div>
+
+                {/* Brand */}
+                <div ref={brandMenuRef} className="relative">
+                    <label className={labelClassName}>Марка</label>
+                    <button
+                        type="button"
+                        onClick={() => setIsBrandMenuOpen(open => !open)}
+                        aria-haspopup="listbox"
+                        aria-expanded={isBrandMenuOpen}
+                        className={`${selectClassName} flex items-center justify-between gap-3 text-left`}
+                    >
+                        <span className="flex min-w-0 items-center gap-3">
+                            {filters.brand && (
+                                <img
+                                    src={getBrandLogoPath(filters.brand)}
+                                    alt=""
+                                    className="h-6 w-8 shrink-0 object-contain"
+                                    onLoad={(event) => { event.currentTarget.style.visibility = 'visible'; }}
+                                    onError={(event) => { event.currentTarget.style.visibility = 'hidden'; }}
+                                />
+                            )}
+                            <span className="truncate">{filters.brand || 'Будь-яка марка'}</span>
+                        </span>
+                        <FiChevronDown
+                            aria-hidden="true"
+                            className={`shrink-0 transition-transform ${isBrandMenuOpen ? 'rotate-180' : ''}`}
+                        />
+                    </button>
+
+                    {isBrandMenuOpen && (
+                        <div
+                            role="listbox"
+                            aria-label="Марка автомобіля"
+                            className="absolute inset-x-0 z-30 mt-2 max-h-64 overflow-y-auto rounded-md border border-gray-600 bg-gray-800 p-1 shadow-2xl"
+                        >
+                            <button
+                                type="button"
+                                role="option"
+                                aria-selected={!filters.brand}
+                                onClick={() => {
+                                    setFilters(prev => ({ ...prev, brand: '' }));
+                                    setIsBrandMenuOpen(false);
+                                }}
+                                className="flex w-full items-center justify-between rounded px-3 py-2 text-left text-sm text-gray-100 hover:bg-gray-700"
+                            >
+                                <span>Будь-яка марка</span>
+                                {!filters.brand && <FiCheck aria-hidden="true" />}
+                            </button>
+                            {referenceData.brands.map(brand => (
+                                <button
+                                    key={brand}
+                                    type="button"
+                                    role="option"
+                                    aria-selected={filters.brand === brand}
+                                    onClick={() => {
+                                        setFilters(prev => ({ ...prev, brand }));
+                                        setIsBrandMenuOpen(false);
+                                    }}
+                                    className="flex w-full items-center justify-between gap-3 rounded px-3 py-2 text-left text-sm text-gray-100 hover:bg-gray-700"
+                                >
+                                    <span className="flex min-w-0 items-center gap-3">
+                                        <img
+                                            src={getBrandLogoPath(brand)}
+                                            alt=""
+                                            loading="lazy"
+                                            className="h-7 w-9 shrink-0 object-contain"
+                                            onLoad={(event) => { event.currentTarget.style.visibility = 'visible'; }}
+                                            onError={(event) => { event.currentTarget.style.visibility = 'hidden'; }}
+                                        />
+                                        <span className="truncate">{brand}</span>
+                                    </span>
+                                    {filters.brand === brand && <FiCheck aria-hidden="true" className="shrink-0" />}
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* Engine Volume Range */}
